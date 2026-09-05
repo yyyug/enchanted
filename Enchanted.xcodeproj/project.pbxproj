@@ -103,6 +103,8 @@
 		FFEC9BE72B813A8D00AFBA63 /* RemovableImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFEC9BE62B813A8D00AFBA63 /* RemovableImage.swift */; };
 		FFFD00C22B92607800392AE6 /* CompletionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFD00C12B92607800392AE6 /* CompletionsStore.swift */; };
 		FFFD00C92B94CB5E00392AE6 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = FFFD00C82B94CB5E00392AE6 /* AsyncAlgorithms */; };
+		A1B2C3D4E5F6000100000001 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000100000001 /* LLMService.swift */; };
+		A1B2C3D4E5F6000100000002 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000100000002 /* OpenAIService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
