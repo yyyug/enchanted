@@ -170,8 +170,10 @@ actor SpeechRecognizer: ObservableObject {
                 self?.recognitionHandler(audioEngine: audioEngine, result: result, error: error)
             })
             silenceTimerManager.start(onFire: { [weak self] in
-                self?.reset()
-                self?.onAutoStop?()
+                MainActor.assumeIsolated {
+                    self?.reset()
+                    self?.onAutoStop?()
+                }
             })
         } catch {
             print("error here")
