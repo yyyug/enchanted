@@ -58,13 +58,13 @@ class OllamaService: LLMService, @unchecked Sendable {
             OKChatRequestData.Message(
                 role: OKChatRequestData.Message.Role(rawValue: message.role.rawValue) ?? .assistant,
                 content: message.content,
-                images: message.images
+                images: message.images ?? nil
             )
         }
 
         var okRequest = OKChatRequestData(model: request.model, messages: okMessages)
         if let temp = request.temperature {
-            okRequest.options = OKCompletionOptions(temperature: temp)
+            okRequest.options = OKCompletionOptions(temperature: Float(temp))
         }
 
         let cancellable = ollamaKit.chat(data: okRequest)

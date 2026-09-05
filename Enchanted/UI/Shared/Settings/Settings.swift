@@ -96,10 +96,7 @@ struct Settings: View {
             appUserInitials: $appUserInitials,
             pingInterval: $pingInterval,
             voiceIdentifier: $voiceIdentifier,
-            activeProvider: Binding(
-                get: { activeProvider },
-                set: { activeProvider = $0 }
-            ),
+            activeProvider: $activeProviderString,
             openAIBaseURL: $openAIBaseURL,
             openAIApiKey: $openAIApiKey,
             save: save,

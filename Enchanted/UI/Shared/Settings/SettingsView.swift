@@ -19,7 +19,7 @@ struct SettingsView: View {
     @Binding var appUserInitials: String
     @Binding var pingInterval: String
     @Binding var voiceIdentifier: String
-    @Binding var activeProvider: ModelProvider
+    @Binding var activeProvider: String
     @Binding var openAIBaseURL: String
     @Binding var openAIApiKey: String
     @State var ollamaStatus: Bool?
@@ -67,13 +67,13 @@ struct SettingsView: View {
             Form {
                 Section(header: Text("Provider").font(.headline)) {
                     Picker("Provider", selection: $activeProvider) {
-                        Text("Ollama").tag(ModelProvider.ollama)
-                        Text("OpenAI Compatible").tag(ModelProvider.openAI)
+                        Text("Ollama").tag("ollama")
+                        Text("OpenAI Compatible").tag("openAI")
                     }
                     .pickerStyle(.segmented)
                 }
 
-                if activeProvider == .ollama {
+                if activeProvider == "ollama" {
                     Section(header: Text("Ollama").font(.headline)) {
 
                         TextField("Ollama server URI", text: $ollamaUri, onCommit: checkServer)
@@ -140,7 +140,7 @@ struct SettingsView: View {
                         Label {
                             Text("Default Model")
                         } icon: {
-                            Image(activeProvider == .ollama ? "ollama" : "brain")
+                            Image(activeProvider == "ollama" ? "ollama" : "brain")
                                 .renderingMode(.template)
                                 .resizable()
                                 .scaledToFit()
@@ -247,7 +247,7 @@ struct SettingsView: View {
         appUserInitials: .constant("AM"),
         pingInterval: .constant("5"),
         voiceIdentifier: .constant("sample"),
-        activeProvider: .constant(.ollama), 
+        activeProvider: .constant("ollama"), 
         openAIBaseURL: .constant("https://api.openai.com/v1"),
         openAIApiKey: .constant(""),
         save: {},

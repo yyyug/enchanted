@@ -52,7 +52,7 @@ final class CompletionsPanelVM {
         let messages: [ChatMessage] = [
             ChatMessage(role: .user, content: prompt, images: nil)
         ]
-        let request = ChatRequest(model: model.name, messages: messages, temperature: completion.modelTemperature ?? 0.8)
+        let request = ChatRequest(model: model.name, messages: messages, temperature: completion.modelTemperature.map(Double.init) ?? 0.8)
         currentMessageBuffer = ""
         messageResponse = ""
 
