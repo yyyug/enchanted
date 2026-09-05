@@ -20,6 +20,24 @@ jobs:
         with:
           xcode-version: latest-stable
 
+      - name: Cache Swift Packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData/Enchanted-*/SourcePackages
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Cache Derived Data
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData/Enchanted-*
+          key: ${{ runner.os }}-derived-${{ hashFiles('**/*.swift') }}-${{ hashFiles('**/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-derived-
+
       - name: Build Archive
         run: |
           xcodebuild archive \
@@ -28,6 +46,7 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/Enchanted.xcarchive \
+            -clonedSourcePackagesDirPath ~/Library/Developer/Xcode/DerivedData/Enchanted-*/SourcePackages \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \

@@ -4,7 +4,8 @@
       "Shell(git:*)",
       "Shell(gh:*)",
       "powershell",
-      "Shell(ping -n 60 127.0.0.1 >nul & gh run list --workflow=build.yml --limit 1)"
+      "Shell(ping -n 60 127.0.0.1 >nul & gh run list --workflow=build.yml --limit 1)",
+      "Shell(ping -n 180 127.0.0.1 >nul & gh run list --workflow=build.yml --limit 1)"
     ],
     "deny": [],
     "defaultMode": "default"
