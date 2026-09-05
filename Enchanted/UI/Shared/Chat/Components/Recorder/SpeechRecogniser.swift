@@ -27,12 +27,16 @@ actor SpeechRecognizer: ObservableObject {
     }
     
     @MainActor var transcript: String = ""
-    
+
     private var audioEngine: AVAudioEngine?
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
     var recognizer: SFSpeechRecognizer?
     private var onUpdate: ((String) -> ())?
+    var onAutoStop: (() -> ())?
+    private var silenceTimer: Timer?
+    private let silenceTimeout: TimeInterval = 1.5
+    private let silenceThreshold: Float = 0.01
     
     /**
      Initializes a new speech recognizer. If this is the first time you've used the class, it
@@ -43,7 +47,7 @@ actor SpeechRecognizer: ObservableObject {
             return
         }
         
-        recognizer = SFSpeechRecognizer()
+        recognizer = SFSpeechRecognizer(locale: Locale.current)
         guard recognizer != nil else {
             transcribe(RecognizerError.nilRecognizer)
             return
@@ -113,50 +117,65 @@ actor SpeechRecognizer: ObservableObject {
             self.transcribe(RecognizerError.recognizerIsUnavailable)
             return
         }
-        
+
         do {
-            let (audioEngine, request) = try Self.prepareEngine()
+            let (audioEngine, request) = try Self.prepareEngine { [weak self] buffer in
+                self?.handleAudioBuffer(buffer)
+            }
             self.audioEngine = audioEngine
             self.request = request
             self.task = recognizer.recognitionTask(with: request, resultHandler: { [weak self] result, error in
                 self?.recognitionHandler(audioEngine: audioEngine, result: result, error: error)
             })
+            startSilenceTimer()
         } catch {
             print("error here")
             self.reset()
             self.transcribe(error)
         }
     }
-    
+
     /// Reset the speech recognizer.
     private func reset() {
+        stopSilenceTimer()
         task?.cancel()
         audioEngine?.stop()
         audioEngine = nil
         request = nil
         task = nil
+
+        #if os(iOS)
+        try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
+        #endif
     }
-    
-    private static func prepareEngine() throws -> (AVAudioEngine, SFSpeechAudioBufferRecognitionRequest) {
+
+    private func handleAudioBuffer(_ buffer: AVAudioPCMBuffer) {
+        if isAudioLevelAboveThreshold(buffer: buffer) {
+            resetSilenceTimer()
+        }
+    }
+
+    private static func prepareEngine(onBuffer: @escaping (AVAudioPCMBuffer) -> Void) throws -> (AVAudioEngine, SFSpeechAudioBufferRecognitionRequest) {
         let audioEngine = AVAudioEngine()
-        
+
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
-        
+
 #if os(iOS) || os(visionOS)
         let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: .duckOthers)
+        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
 #endif
         let inputNode = audioEngine.inputNode
-        
+
         let recordingFormat = inputNode.outputFormat(forBus: 0)
         inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { (buffer: AVAudioPCMBuffer, when: AVAudioTime) in
             request.append(buffer)
+            onBuffer(buffer)
         }
         audioEngine.prepare()
         try audioEngine.start()
-        
+
         return (audioEngine, request)
     }
     
@@ -193,6 +212,49 @@ actor SpeechRecognizer: ObservableObject {
         Task { @MainActor [errorMessage] in
             transcript = "<< \(errorMessage) >>"
         }
+    }
+
+    private func startSilenceTimer() {
+        Task { @MainActor in
+            self.silenceTimer?.invalidate()
+            self.silenceTimer = Timer.scheduledTimer(withTimeInterval: self.silenceTimeout, repeats: false) { [weak self] _ in
+                Task { @MainActor in
+                    self?.autoStopRecording()
+                }
+            }
+        }
+    }
+
+    private func stopSilenceTimer() {
+        Task { @MainActor in
+            self.silenceTimer?.invalidate()
+            self.silenceTimer = nil
+        }
+    }
+
+    private func resetSilenceTimer() {
+        Task { @MainActor in
+            self.startSilenceTimer()
+        }
+    }
+
+    private func autoStopRecording() {
+        stopSilenceTimer()
+        stopTranscribing()
+        onAutoStop?()
+    }
+
+    private func isAudioLevelAboveThreshold(buffer: AVAudioPCMBuffer) -> Bool {
+        guard let channelData = buffer.floatChannelData?[0] else { return false }
+        let frameLength = Int(buffer.frameLength)
+        guard frameLength > 0 else { return false }
+
+        var sum: Float = 0
+        for i in 0..<frameLength {
+            sum += abs(channelData[i])
+        }
+        let averageLevel = sum / Float(frameLength)
+        return averageLevel > silenceThreshold
     }
 }
 

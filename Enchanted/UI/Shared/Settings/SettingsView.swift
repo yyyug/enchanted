@@ -18,6 +18,7 @@ struct SettingsView: View {
     @Binding var ollamaBearerToken: String
     @Binding var appUserInitials: String
     @Binding var pingInterval: String
+    @Binding var autoSpeak: Bool
     @Binding var voiceIdentifier: String
     @Binding var activeProvider: String
     @Binding var openAIBaseURL: String
@@ -67,8 +68,8 @@ struct SettingsView: View {
             Form {
                 Section(header: Text("Provider").font(.headline)) {
                     Picker("Provider", selection: $activeProvider) {
-                        Text("Ollama").tag("ollama")
                         Text("OpenAI Compatible").tag("openAI")
+                        Text("Ollama").tag("ollama")
                     }
                     .pickerStyle(.segmented)
                 }
@@ -80,6 +81,7 @@ struct SettingsView: View {
                             .textContentType(.URL)
                             .disableAutocorrection(true)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .accessibilityLabel("Ollama server URI")
     #if !os(macOS)
                             .padding(.top, 8)
                             .keyboardType(.URL)
@@ -89,12 +91,14 @@ struct SettingsView: View {
                         TextField("Bearer Token", text: $ollamaBearerToken)
                             .disableAutocorrection(true)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .accessibilityLabel("Bearer Token")
     #if os(iOS)
                             .autocapitalization(.none)
     #endif
                         TextField("Ping Interval (seconds)", text: $pingInterval)
                             .disableAutocorrection(true)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .accessibilityLabel("Ping Interval")
                     }
                 } else {
                     Section(header: Text("OpenAI Compatible").font(.headline)) {
@@ -169,6 +173,11 @@ struct SettingsView: View {
                     Label("Appearance", systemImage: "sun.max")
                         .foregroundStyle(Color.label)
                 }
+
+                Toggle(isOn: $autoSpeak, label: {
+                    Label("Auto-speak Responses", systemImage: "speaker.wave.2")
+                        .foregroundStyle(Color.label)
+                })
 
                 Picker(selection: $voiceIdentifier) {
                     ForEach(voices, id:\.self.identifier) { voice in
@@ -246,7 +255,8 @@ struct SettingsView: View {
         ollamaBearerToken: .constant("x"),
         appUserInitials: .constant("AM"),
         pingInterval: .constant("5"),
-        voiceIdentifier: .constant("sample"),
+         autoSpeak: .constant(false),
+         voiceIdentifier: .constant("sample"),
         activeProvider: .constant("ollama"), 
         openAIBaseURL: .constant("https://api.openai.com/v1"),
         openAIApiKey: .constant(""),

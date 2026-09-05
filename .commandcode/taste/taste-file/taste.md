@@ -1,0 +1,12 @@
+# Taste File
+- Works with Swift/SwiftUI for iOS and macOS app development. Confidence: 0.7
+- Values OpenAI-compatible API support in LLM applications, preferring interoperability over single-provider lock-in. Confidence: 0.8
+- Prefers apps to support multiple LLM providers rather than being tied to one service. Confidence: 0.7
+- Communicates in a casual, direct manner with abbreviated language. Confidence: 0.6
+- Writes in ALL CAPS as a consistent communication style. Confidence: 0.7
+- Interested in Cantonese TTS (text-to-speech) tools, comparing models like canto-tts and vits-cantonese-hf-xiaomaiiwn. Confidence: 0.7
+- Values speed/performance comparisons when evaluating tools, asking about relative speed between options. Confidence: 0.6
+- Prefers project-isolated tooling and dependencies, removing global/hermes-installed artifacts (.venv, uv.lock) to avoid cross-contamination between toolchains. Confidence: 0.7
+- Uses Python with the uv package manager for project dependency management. Confidence: 0.6
+- Prefers shared/common settings UI across LLM providers rather than duplicating controls per provider. Confidence: 0.6
+- Prefers toggle controls to appear before related selectors/pickers in settings UI (e.g., enable toggle before voice picker). Confidence: 0.5

@@ -18,6 +18,10 @@ struct MessageListView: View {
     @Binding var editMessage: MessageSD?
     @State private var messageSelected: MessageSD?
     @StateObject private var speechSynthesizer = SpeechSynthesizer.shared
+
+    private var autoSpeak: Bool {
+        UserDefaults.standard.bool(forKey: "autoSpeak")
+    }
     
     func onEditMessageTap() -> (MessageSD) -> Void {
         return { message in
@@ -117,6 +121,13 @@ struct MessageListView: View {
                     insertion: AnyTransition.opacity.combined(with: .scale(scale: 0.7, anchor: .top)),
                     removal: AnyTransition.opacity.combined(with: .scale(scale: 0.7, anchor: .top)))
                 )
+        }
+        .onChange(of: conversationState) { _, newState in
+            if newState == .completed, autoSpeak, let lastMessage = messages.last, lastMessage.role == "assistant" {
+                Task {
+                    await speechSynthesizer.speak(text: lastMessage.content)
+                }
+            }
         }
     }
 }

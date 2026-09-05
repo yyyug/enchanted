@@ -27,6 +27,14 @@ struct RecordingView: View {
             onComplete(speechRecognizer.transcript)
             isRecording = false
         } else {
+            speechRecognizer.onAutoStop = {
+                Task { @MainActor in
+                    if isRecording {
+                        onComplete(speechRecognizer.transcript)
+                        isRecording = false
+                    }
+                }
+            }
             speechRecognizer.resetTranscript()
             speechRecognizer.startTranscribing(onUpdate: onComplete)
             isRecording = true
@@ -56,6 +64,7 @@ struct RecordingView: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Voice")
         .onChange(of: isRecording) { oldValue, newValue in
             if newValue == false {
                 speechRecognizer.stopTranscribing()

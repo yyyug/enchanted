@@ -61,10 +61,10 @@ class SpeechSynthesizerDelegate: NSObject, AVSpeechSynthesizerDelegate {
         print("selected", voiceIdentifier)
         
 #if os(iOS)
-        let audioSession = AVAudioSession()
+        let audioSession = AVAudioSession.sharedInstance()
         do {
             try audioSession.setCategory(.playback, mode: .default, options: .duckOthers)
-            try audioSession.setActive(false)
+            try audioSession.setActive(true)
         } catch let error {
             print("❓", error.localizedDescription)
         }

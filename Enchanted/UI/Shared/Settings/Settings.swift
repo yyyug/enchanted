@@ -21,6 +21,7 @@ struct Settings: View {
     @AppStorage("ollamaBearerToken") private var ollamaBearerToken: String = ""
     @AppStorage("appUserInitials") private var appUserInitials: String = ""
     @AppStorage("pingInterval") private var pingInterval: String = "5"
+    @AppStorage("autoSpeak") private var autoSpeak: Bool = false
     @AppStorage("voiceIdentifier") private var voiceIdentifier: String = ""
     @AppStorage("activeProvider") private var activeProviderString: String = "ollama"
 
@@ -95,7 +96,8 @@ struct Settings: View {
             ollamaBearerToken: $ollamaBearerToken,
             appUserInitials: $appUserInitials,
             pingInterval: $pingInterval,
-            voiceIdentifier: $voiceIdentifier,
+             autoSpeak: $autoSpeak,
+             voiceIdentifier: $voiceIdentifier,
             activeProvider: $activeProviderString,
             openAIBaseURL: $openAIBaseURL,
             openAIApiKey: $openAIApiKey,
