@@ -25,12 +25,13 @@ jobs:
           xcodebuild archive \
             -project Enchanted.xcodeproj \
             -scheme Enchanted \
-            -configuration Debug \
+            -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath build/Enchanted.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_STYLE=Manual
 
       - name: Export Unsigned IPA
         run: |
@@ -50,6 +51,12 @@ jobs:
               <true/>
               <key>thinning</key>
               <string>&lt;none&gt;</string>
+              <key>signingCertificate</key>
+              <string></string>
+              <key>provisioningProfiles</key>
+              <dict/>
+              <key>teamID</key>
+              <string></string>
           </dict>
           </plist>
           EOF
@@ -57,13 +64,17 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath build/Enchanted.xcarchive \
             -exportPath build/ipa \
-            -exportOptionsPlist build/ExportOptions.plist
+            -exportOptionsPlist build/ExportOptions.plist \
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Package IPA
         run: |
-          mv build/ipa/*.ipa build/Enchanted-unsigned.ipa 2>/dev/null || \
-          mv build/ipa/Enchanted.ipa build/Enchanted-unsigned.ipa 2>/dev/null || \
-          find build/ipa -name "*.ipa" -exec mv {} build/Enchanted-unsigned.ipa \;
+          IPA_PATH=$(find build/ipa -name "*.ipa" | head -1)
+          if [ -z "$IPA_PATH" ]; then
+            echo "No IPA found!"
+            exit 1
+          fi
+          mv "$IPA_PATH" build/Enchanted-unsigned.ipa
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
