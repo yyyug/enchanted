@@ -9,6 +9,49 @@
 import Foundation
 import Speech
 
+@MainActor
+final class SilenceTimerManager {
+    private var silenceTimer: Timer?
+    private let silenceTimeout: TimeInterval = 1.5
+    private let silenceThreshold: Float = 0.01
+    private var onSilenceDetected: (() -> Void)?
+
+    var onAutoStop: (() -> Void)? {
+        get { onSilenceDetected }
+        set { onSilenceDetected = newValue }
+    }
+
+    func start() {
+        stop()
+        silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceTimeout, repeats: false) { [weak self] _ in
+            self?.onSilenceDetected?()
+        }
+    }
+
+    func stop() {
+        silenceTimer?.invalidate()
+        silenceTimer = nil
+    }
+
+    func reset() {
+        stop()
+        start()
+    }
+
+    nonisolated static func isAudioLevelAboveThreshold(buffer: AVAudioPCMBuffer) -> Bool {
+        guard let channelData = buffer.floatChannelData?[0] else { return false }
+        let frameLength = Int(buffer.frameLength)
+        guard frameLength > 0 else { return false }
+
+        var sum: Float = 0
+        for i in 0..<frameLength {
+            sum += abs(channelData[i])
+        }
+        let averageLevel = sum / Float(frameLength)
+        return averageLevel > 0.01
+    }
+}
+
 actor SpeechRecognizer: ObservableObject {
     enum RecognizerError: Error {
         case nilRecognizer
@@ -34,9 +77,7 @@ actor SpeechRecognizer: ObservableObject {
     var recognizer: SFSpeechRecognizer?
     private var onUpdate: ((String) -> ())?
     var onAutoStop: (() -> ())?
-    private var silenceTimer: Timer?
-    private let silenceTimeout: TimeInterval = 1.5
-    private let silenceThreshold: Float = 0.01
+    private let silenceTimerManager = SilenceTimerManager()
     
     /**
      Initializes a new speech recognizer. If this is the first time you've used the class, it
@@ -119,15 +160,24 @@ actor SpeechRecognizer: ObservableObject {
         }
 
         do {
-            let (audioEngine, request) = try Self.prepareEngine { [weak self] buffer in
-                self?.handleAudioBuffer(buffer)
+            silenceTimerManager.onAutoStop = { [weak self] in
+                Task { [weak self] in
+                    await self?.autoStopRecording()
+                }
+            }
+            let (audioEngine, request) = try Self.prepareEngine { buffer in
+                if SilenceTimerManager.isAudioLevelAboveThreshold(buffer: buffer) {
+                    Task { @MainActor in
+                        await self.silenceTimerManager.reset()
+                    }
+                }
             }
             self.audioEngine = audioEngine
             self.request = request
             self.task = recognizer.recognitionTask(with: request, resultHandler: { [weak self] result, error in
                 self?.recognitionHandler(audioEngine: audioEngine, result: result, error: error)
             })
-            startSilenceTimer()
+            silenceTimerManager.start()
         } catch {
             print("error here")
             self.reset()
@@ -137,7 +187,9 @@ actor SpeechRecognizer: ObservableObject {
 
     /// Reset the speech recognizer.
     private func reset() {
-        stopSilenceTimer()
+        Task { @MainActor in
+            self.silenceTimerManager.stop()
+        }
         task?.cancel()
         audioEngine?.stop()
         audioEngine = nil
@@ -149,12 +201,9 @@ actor SpeechRecognizer: ObservableObject {
         #endif
     }
 
-    private func handleAudioBuffer(_ buffer: AVAudioPCMBuffer) {
-        if isAudioLevelAboveThreshold(buffer: buffer) {
-            Task { [weak self] in
-                await self?.resetSilenceTimer()
-            }
-        }
+    private func autoStopRecording() async {
+        reset()
+        onAutoStop?()
     }
 
     private static func prepareEngine(onBuffer: @escaping (AVAudioPCMBuffer) -> Void) throws -> (AVAudioEngine, SFSpeechAudioBufferRecognitionRequest) {
@@ -216,43 +265,6 @@ actor SpeechRecognizer: ObservableObject {
         }
     }
 
-    private func startSilenceTimer() {
-        silenceTimer?.invalidate()
-        silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceTimeout, repeats: false) { [weak self] _ in
-            Task { [weak self] in
-                await self?.autoStopRecording()
-            }
-        }
-    }
-
-    private func stopSilenceTimer() {
-        silenceTimer?.invalidate()
-        silenceTimer = nil
-    }
-
-    private func resetSilenceTimer() async {
-        stopSilenceTimer()
-        startSilenceTimer()
-    }
-
-    private func autoStopRecording() async {
-        stopSilenceTimer()
-        reset()
-        onAutoStop?()
-    }
-
-    nonisolated private func isAudioLevelAboveThreshold(buffer: AVAudioPCMBuffer) -> Bool {
-        guard let channelData = buffer.floatChannelData?[0] else { return false }
-        let frameLength = Int(buffer.frameLength)
-        guard frameLength > 0 else { return false }
-
-        var sum: Float = 0
-        for i in 0..<frameLength {
-            sum += abs(channelData[i])
-        }
-        let averageLevel = sum / Float(frameLength)
-        return averageLevel > 0.01
-    }
 }
 
 
