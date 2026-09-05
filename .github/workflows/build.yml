@@ -1,0 +1,90 @@
+name: Build Unsigned IPA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build Archive
+        run: |
+          xcodebuild archive \
+            -project Enchanted.xcodeproj \
+            -scheme Enchanted \
+            -configuration Debug \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/Enchanted.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Export Unsigned IPA
+        run: |
+          mkdir -p build/ipa
+          cat > build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>development</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>compileBitcode</key>
+              <false/>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>thinning</key>
+              <string>&lt;none&gt;</string>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath build/Enchanted.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist build/ExportOptions.plist
+
+      - name: Package IPA
+        run: |
+          mv build/ipa/*.ipa build/Enchanted-unsigned.ipa 2>/dev/null || \
+          mv build/ipa/Enchanted.ipa build/Enchanted-unsigned.ipa 2>/dev/null || \
+          find build/ipa -name "*.ipa" -exec mv {} build/Enchanted-unsigned.ipa \;
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Enchanted-unsigned.ipa
+          path: build/Enchanted-unsigned.ipa
+          retention-days: 30
+
+      - name: Create Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          body: |
+            Unsigned IPA build from main branch.
+            Built with Xcode on macOS runner.
+
+            **Note:** This is an unsigned build. You'll need to sideload it using AltStore, Sideloadly, or similar tools.
+          files: build/Enchanted-unsigned.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
