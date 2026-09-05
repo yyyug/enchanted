@@ -55,11 +55,10 @@ class OllamaService: LLMService, @unchecked Sendable {
         let subject = PassthroughSubject<any ChatResponse, Error>()
 
         var okMessages: [OKChatRequestData.Message] = request.messages.map { message in
-            let images = message.images ?? []
             return OKChatRequestData.Message(
                 role: OKChatRequestData.Message.Role(rawValue: message.role.rawValue) ?? .assistant,
                 content: message.content,
-                images: images.isEmpty ? nil : images
+                images: message.images ?? []
             )
         }
 
