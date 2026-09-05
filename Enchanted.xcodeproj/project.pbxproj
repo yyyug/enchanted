@@ -745,8 +745,8 @@
 				FF10025E2B2648460011A4DC /* ConversationState.swift in Sources */,
 				FFEC9BE72B813A8D00AFBA63 /* RemovableImage.swift in Sources */,
 				FFFD00C22B92607800392AE6 /* CompletionsStore.swift in Sources */,
-			A1B2C3D4E5F6000100000001 /* LLMService.swift in Sources */,
-			A1B2C3D4E5F6000100000002 /* OpenAIService.swift in Sources */,
+				A1B2C3D4E5F6000100000001 /* LLMService.swift in Sources */,
+				A1B2C3D4E5F6000100000002 /* OpenAIService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
