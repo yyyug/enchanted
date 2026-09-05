@@ -12,13 +12,15 @@ import Speech
 final class SilenceTimerManager {
     private var silenceTimer: Timer?
     private let silenceTimeout: TimeInterval = 1.5
-    private let silenceThreshold: Float = 0.01
-    var onAutoStop: (() -> Void)?
+    private var onFire: (() -> Void)?
 
-    func start() {
+    func start(onFire: @escaping () -> Void) {
         stop()
+        self.onFire = onFire
         silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceTimeout, repeats: false) { [weak self] _ in
-            self?.onAutoStop?()
+            MainActor.assumeIsolated {
+                self?.onFire?()
+            }
         }
     }
 
@@ -29,7 +31,8 @@ final class SilenceTimerManager {
 
     func reset() {
         stop()
-        start()
+        guard let onFire = onFire else { return }
+        start(onFire: onFire)
     }
 
     nonisolated static func isAudioLevelAboveThreshold(buffer: AVAudioPCMBuffer) -> Bool {
@@ -154,13 +157,11 @@ actor SpeechRecognizer: ObservableObject {
         }
 
         do {
-            silenceTimerManager.onAutoStop = { [weak self] in
-                self?.reset()
-                self?.onAutoStop?()
-            }
-            let (audioEngine, request) = try Self.prepareEngine { [weak self] buffer in
+            let (audioEngine, request) = try Self.prepareEngine { buffer in
                 if SilenceTimerManager.isAudioLevelAboveThreshold(buffer: buffer) {
-                    self?.silenceTimerManager.reset()
+                    MainActor.assumeIsolated {
+                        self.silenceTimerManager.reset()
+                    }
                 }
             }
             self.audioEngine = audioEngine
@@ -168,7 +169,10 @@ actor SpeechRecognizer: ObservableObject {
             self.task = recognizer.recognitionTask(with: request, resultHandler: { [weak self] result, error in
                 self?.recognitionHandler(audioEngine: audioEngine, result: result, error: error)
             })
-            silenceTimerManager.start()
+            silenceTimerManager.start(onFire: { [weak self] in
+                self?.reset()
+                self?.onAutoStop?()
+            })
         } catch {
             print("error here")
             self.reset()

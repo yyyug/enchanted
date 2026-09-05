@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Shell(git:*)",
-      "Shell(gh:*)"
+      "Shell(gh:*)",
+      "powershell"
     ],
     "deny": [],
     "defaultMode": "default"
