@@ -151,7 +151,9 @@ actor SpeechRecognizer: ObservableObject {
 
     private func handleAudioBuffer(_ buffer: AVAudioPCMBuffer) {
         if isAudioLevelAboveThreshold(buffer: buffer) {
-            resetSilenceTimer()
+            Task { [weak self] in
+                await self?.resetSilenceTimer()
+            }
         }
     }
 
@@ -215,36 +217,31 @@ actor SpeechRecognizer: ObservableObject {
     }
 
     private func startSilenceTimer() {
-        Task { @MainActor in
-            self.silenceTimer?.invalidate()
-            self.silenceTimer = Timer.scheduledTimer(withTimeInterval: self.silenceTimeout, repeats: false) { [weak self] _ in
-                Task { @MainActor in
-                    self?.autoStopRecording()
-                }
+        silenceTimer?.invalidate()
+        silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceTimeout, repeats: false) { [weak self] _ in
+            Task { [weak self] in
+                await self?.autoStopRecording()
             }
         }
     }
 
     private func stopSilenceTimer() {
-        Task { @MainActor in
-            self.silenceTimer?.invalidate()
-            self.silenceTimer = nil
-        }
+        silenceTimer?.invalidate()
+        silenceTimer = nil
     }
 
-    private func resetSilenceTimer() {
-        Task { @MainActor in
-            self.startSilenceTimer()
-        }
-    }
-
-    private func autoStopRecording() {
+    private func resetSilenceTimer() async {
         stopSilenceTimer()
-        stopTranscribing()
+        startSilenceTimer()
+    }
+
+    private func autoStopRecording() async {
+        stopSilenceTimer()
+        reset()
         onAutoStop?()
     }
 
-    private func isAudioLevelAboveThreshold(buffer: AVAudioPCMBuffer) -> Bool {
+    nonisolated private func isAudioLevelAboveThreshold(buffer: AVAudioPCMBuffer) -> Bool {
         guard let channelData = buffer.floatChannelData?[0] else { return false }
         let frameLength = Int(buffer.frameLength)
         guard frameLength > 0 else { return false }
@@ -254,7 +251,7 @@ actor SpeechRecognizer: ObservableObject {
             sum += abs(channelData[i])
         }
         let averageLevel = sum / Float(frameLength)
-        return averageLevel > silenceThreshold
+        return averageLevel > 0.01
     }
 }
 

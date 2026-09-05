@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Shell(git:*)"
+      "Shell(git:*)",
+      "Shell(gh:*)"
     ],
     "deny": [],
     "defaultMode": "default"
