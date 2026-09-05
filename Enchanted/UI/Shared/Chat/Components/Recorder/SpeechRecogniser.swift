@@ -9,22 +9,16 @@
 import Foundation
 import Speech
 
-@MainActor
 final class SilenceTimerManager {
     private var silenceTimer: Timer?
     private let silenceTimeout: TimeInterval = 1.5
     private let silenceThreshold: Float = 0.01
-    private var onSilenceDetected: (() -> Void)?
-
-    var onAutoStop: (() -> Void)? {
-        get { onSilenceDetected }
-        set { onSilenceDetected = newValue }
-    }
+    var onAutoStop: (() -> Void)?
 
     func start() {
         stop()
         silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceTimeout, repeats: false) { [weak self] _ in
-            self?.onSilenceDetected?()
+            self?.onAutoStop?()
         }
     }
 
@@ -161,15 +155,12 @@ actor SpeechRecognizer: ObservableObject {
 
         do {
             silenceTimerManager.onAutoStop = { [weak self] in
-                Task { [weak self] in
-                    await self?.autoStopRecording()
-                }
+                self?.reset()
+                self?.onAutoStop?()
             }
-            let (audioEngine, request) = try Self.prepareEngine { buffer in
+            let (audioEngine, request) = try Self.prepareEngine { [weak self] buffer in
                 if SilenceTimerManager.isAudioLevelAboveThreshold(buffer: buffer) {
-                    Task { @MainActor in
-                        await self.silenceTimerManager.reset()
-                    }
+                    self?.silenceTimerManager.reset()
                 }
             }
             self.audioEngine = audioEngine
@@ -187,9 +178,7 @@ actor SpeechRecognizer: ObservableObject {
 
     /// Reset the speech recognizer.
     private func reset() {
-        Task { @MainActor in
-            self.silenceTimerManager.stop()
-        }
+        silenceTimerManager.stop()
         task?.cancel()
         audioEngine?.stop()
         audioEngine = nil
@@ -199,11 +188,6 @@ actor SpeechRecognizer: ObservableObject {
         #if os(iOS)
         try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
         #endif
-    }
-
-    private func autoStopRecording() async {
-        reset()
-        onAutoStop?()
     }
 
     private static func prepareEngine(onBuffer: @escaping (AVAudioPCMBuffer) -> Void) throws -> (AVAudioEngine, SFSpeechAudioBufferRecognitionRequest) {
