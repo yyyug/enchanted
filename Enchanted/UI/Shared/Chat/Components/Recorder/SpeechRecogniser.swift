@@ -18,9 +18,7 @@ final class SilenceTimerManager {
         stop()
         self.onFire = onFire
         silenceTimer = Timer.scheduledTimer(withTimeInterval: silenceTimeout, repeats: false) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.onFire?()
-            }
+            self?.onFire?()
         }
     }
 
@@ -49,7 +47,8 @@ final class SilenceTimerManager {
     }
 }
 
-actor SpeechRecognizer: ObservableObject {
+@MainActor
+final class SpeechRecognizer: ObservableObject {
     enum RecognizerError: Error {
         case nilRecognizer
         case notAuthorizedToRecognize
@@ -66,7 +65,7 @@ actor SpeechRecognizer: ObservableObject {
         }
     }
     
-    @MainActor var transcript: String = ""
+    var transcript: String = ""
 
     private var audioEngine: AVAudioEngine?
     private var request: SFSpeechAudioBufferRecognitionRequest?
@@ -125,23 +124,17 @@ actor SpeechRecognizer: ObservableObject {
         onUpdate = handler
     }
     
-    @MainActor func startTranscribing(onUpdate: @escaping (_ message: String) -> ()) {
-        Task {
-            await self.setUpdateHandler(onUpdate)
-            await transcribe()
-        }
+    func startTranscribing(onUpdate: @escaping (_ message: String) -> ()) {
+        setUpdateHandler(onUpdate)
+        transcribe()
     }
-    
-    @MainActor func resetTranscript() {
-        Task {
-            await reset()
-        }
+
+    func resetTranscript() {
+        reset()
     }
-    
-    @MainActor func stopTranscribing() {
-        Task {
-            await reset()
-        }
+
+    func stopTranscribing() {
+        reset()
     }
     
     /**
@@ -157,11 +150,9 @@ actor SpeechRecognizer: ObservableObject {
         }
 
         do {
-            let (audioEngine, request) = try Self.prepareEngine { buffer in
+            let (audioEngine, request) = try Self.prepareEngine { [weak self] buffer in
                 if SilenceTimerManager.isAudioLevelAboveThreshold(buffer: buffer) {
-                    MainActor.assumeIsolated {
-                        self.silenceTimerManager.reset()
-                    }
+                    self?.silenceTimerManager.reset()
                 }
             }
             self.audioEngine = audioEngine
@@ -170,10 +161,8 @@ actor SpeechRecognizer: ObservableObject {
                 self?.recognitionHandler(audioEngine: audioEngine, result: result, error: error)
             })
             silenceTimerManager.start(onFire: { [weak self] in
-                MainActor.assumeIsolated {
-                    self?.reset()
-                    self?.onAutoStop?()
-                }
+                self?.reset()
+                self?.onAutoStop?()
             })
         } catch {
             print("error here")
@@ -220,7 +209,7 @@ actor SpeechRecognizer: ObservableObject {
         return (audioEngine, request)
     }
     
-    nonisolated private func recognitionHandler(audioEngine: AVAudioEngine, result: SFSpeechRecognitionResult?, error: Error?) {
+    private func recognitionHandler(audioEngine: AVAudioEngine, result: SFSpeechRecognitionResult?, error: Error?) {
         let receivedFinalResult = result?.isFinal ?? false
         let receivedError = error != nil
         
@@ -235,24 +224,20 @@ actor SpeechRecognizer: ObservableObject {
     }
     
     
-    nonisolated private func transcribe(_ message: String) {
-        Task { @MainActor in
-            transcript = message
-            if !message.isEmpty {
-                await onUpdate?(message)
-            }
+    private func transcribe(_ message: String) {
+        transcript = message
+        if !message.isEmpty {
+            onUpdate?(message)
         }
     }
-    nonisolated private func transcribe(_ error: Error) {
+    private func transcribe(_ error: Error) {
         var errorMessage = ""
         if let error = error as? RecognizerError {
             errorMessage += error.message
         } else {
             errorMessage += error.localizedDescription
         }
-        Task { @MainActor [errorMessage] in
-            transcript = "<< \(errorMessage) >>"
-        }
+        transcript = "<< \(errorMessage) >>"
     }
 
 }
