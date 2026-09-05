@@ -64,8 +64,12 @@ final class AppStore {
     }
 
     private func reachable() async -> Bool {
-        let status = await OllamaService.shared.reachable()
-        return status
+        let activeProvider = UserDefaults.standard.string(forKey: "activeProvider") ?? "ollama"
+        if activeProvider == "openAI" {
+            return await OpenAIService.shared.reachable()
+        } else {
+            return await OllamaService.shared.reachable()
+        }
     }
     
     @MainActor func uiLog(message: String, status: NotificationMessage.Status) {

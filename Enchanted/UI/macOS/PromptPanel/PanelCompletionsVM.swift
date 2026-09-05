@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import OllamaKit
 import Combine
 
 @Observable
@@ -19,40 +18,50 @@ final class CompletionsPanelVM {
     private var generation: AnyCancellable?
     private var currentMessageBuffer: String = ""
 
-    
+
     init(onReceiveText: @escaping (String) -> Void = {_ in}) {
         self.onReceiveText = onReceiveText
     }
-    
+
     static func constructPrompt(completion: CompletionInstructionSD, selectedText: String) -> String {
         var prompt = completion.instruction
-        
+
         if prompt.contains("{{text}}") {
             prompt.replace("{{text}}", with: selectedText)
         } else {
             prompt += " " + selectedText
         }
-        
+
         return prompt
     }
-    
+
+    private func getService(for provider: ModelProvider?) -> LLMService {
+        switch provider {
+        case .openAI:
+            return OpenAIService.shared
+        case .ollama, .none:
+            return OllamaService.shared
+        }
+    }
+
     @MainActor
     func sendPrompt(completion: CompletionInstructionSD, model: LanguageModelSD)  {
         guard let selectedText = selectedText, !isReady else { return }
         let prompt = CompletionsPanelVM.constructPrompt(completion: completion, selectedText: selectedText)
-        
-        let messages: [OKChatRequestData.Message] = [
-            .init(role: .user, content: prompt)
+
+        let messages: [ChatMessage] = [
+            ChatMessage(role: .user, content: prompt, images: nil)
         ]
-        var request = OKChatRequestData(model: model.name, messages: messages)
-        request.options = OKCompletionOptions(temperature: completion.modelTemperature ?? 0.8)
+        let request = ChatRequest(model: model.name, messages: messages, temperature: completion.modelTemperature ?? 0.8)
         currentMessageBuffer = ""
         messageResponse = ""
-        
-        print("request", request.messages)
+
+        let service = getService(for: model.modelProvider)
+
+        print("request", messages)
         Task {
-            if await OllamaService.shared.ollamaKit.reachable() {
-                generation = OllamaService.shared.ollamaKit.chat(data: request)
+            if await service.reachable() {
+                generation = service.chat(request: request)
                     .sink(receiveCompletion: { [weak self] completion in
                         switch completion {
                         case .finished:
@@ -68,27 +77,27 @@ final class CompletionsPanelVM {
             }
         }
     }
-    
+
     @MainActor
-    private func handleReceive(_ response: OKChatResponse)  {
+    private func handleReceive(_ response: any ChatResponse)  {
         Task {
-            if let responseContent = response.message?.content {
+            if let responseContent = response.content {
                 await sentenceQueue.enqueue(responseContent)
                 self.messageResponse = self.messageResponse + responseContent
             }
         }
     }
-    
+
     @MainActor
     private func handleError(_ errorMessage: String) {
         print("error \(errorMessage)")
     }
-    
+
     @MainActor
     private func handleComplete() {
         print("model response ", self.messageResponse)
     }
-    
+
     @MainActor
     func cancel() {
         generation?.cancel()
