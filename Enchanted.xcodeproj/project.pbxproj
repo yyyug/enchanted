@@ -103,8 +103,8 @@
 		FFEC9BE72B813A8D00AFBA63 /* RemovableImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFEC9BE62B813A8D00AFBA63 /* RemovableImage.swift */; };
 		FFFD00C22B92607800392AE6 /* CompletionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFD00C12B92607800392AE6 /* CompletionsStore.swift */; };
 		FFFD00C92B94CB5E00392AE6 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = FFFD00C82B94CB5E00392AE6 /* AsyncAlgorithms */; };
-		A1B2C3D4E5F6000100000001 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000100000001 /* LLMService.swift */; };
-		A1B2C3D4E5F6000100000002 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6000100000002 /* OpenAIService.swift */; };
+		B72E20388BB1459D8FFA5701 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72E20388BB1459D8FFA5702 /* LLMService.swift */; };
+		87365B6CE5C9467296725F31 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87365B6CE5C9467296725F32 /* OpenAIService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -199,8 +199,8 @@
 		FFEC9BE22B81358800AFBA63 /* DeallocPrinter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeallocPrinter.swift; sourceTree = "<group>"; };
 		FFEC9BE62B813A8D00AFBA63 /* RemovableImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemovableImage.swift; sourceTree = "<group>"; };
 		FFFD00C12B92607800392AE6 /* CompletionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionsStore.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6000100000001 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F6000100000002 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
+		B72E20388BB1459D8FFA5702 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
+		87365B6CE5C9467296725F32 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -527,9 +527,9 @@
 				FF2F03412B795E0B00349855 /* Clipboard.swift */,
 				FF0146CC2B3DADCA00A2A9F6 /* HapticsService.swift */,
 				FF2F03482B796A6500349855 /* HotkeyService.swift */,
-				A1B2C3D4E5F6000100000001 /* LLMService.swift */,
+				B72E20388BB1459D8FFA5702 /* LLMService.swift */,
 				FF10023D2B24F4900011A4DC /* OllamaService.swift */,
-				A1B2C3D4E5F6000100000002 /* OpenAIService.swift */,
+				87365B6CE5C9467296725F32 /* OpenAIService.swift */,
 				FF10024F2B25C79F0011A4DC /* SwiftDataService.swift */,
 				FF6B7B122B3EE7AC00E8FEA3 /* Throttler.swift */,
 				FFCF00F02C03209A00590E79 /* SpeechService.swift */,
@@ -747,8 +747,8 @@
 				FF10025E2B2648460011A4DC /* ConversationState.swift in Sources */,
 				FFEC9BE72B813A8D00AFBA63 /* RemovableImage.swift in Sources */,
 				FFFD00C22B92607800392AE6 /* CompletionsStore.swift in Sources */,
-				A1B2C3D4E5F6000100000001 /* LLMService.swift in Sources */,
-				A1B2C3D4E5F6000100000002 /* OpenAIService.swift in Sources */,
+				B72E20388BB1459D8FFA5701 /* LLMService.swift in Sources */,
+				87365B6CE5C9467296725F31 /* OpenAIService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
