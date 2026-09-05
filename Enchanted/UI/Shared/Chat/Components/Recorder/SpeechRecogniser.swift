@@ -79,7 +79,7 @@ final class SpeechRecognizer: ObservableObject {
      Initializes a new speech recognizer. If this is the first time you've used the class, it
      requests access to the speech recognizer and the microphone.
      */
-    func userInit() {
+    func userInit() async {
         if recognizer != nil {
             return
         }
@@ -95,31 +95,41 @@ final class SpeechRecognizer: ObservableObject {
 
         guard let rec = recognizer, rec.isAvailable else {
             print("Speech recognizer not available for any locale")
-            transcribe(RecognizerError.nilRecognizer)
+            transcript = "<< Speech recognizer not available >>"
             return
         }
 
         print("Using locale: \(rec.locale.identifier)")
 
-        Task {
-            do {
-                let authStatus = SFSpeechRecognizer.authorizationStatus()
-                print("Speech auth status: \(authStatus.rawValue)")
+        // Request authorization - this shows the permission dialog
+        let authStatus = SFSpeechRecognizer.authorizationStatus()
+        print("Current speech auth status: \(authStatus.rawValue)")
 
-                guard await SFSpeechRecognizer.hasAuthorizationToRecognize() else {
-                    throw RecognizerError.notAuthorizedToRecognize
-                }
-#if os(iOS)
-                guard await AVAudioSession.sharedInstance().hasPermissionToRecord() else {
-                    throw RecognizerError.notPermittedToRecord
-                }
-#endif
-                print("Speech recognizer initialized successfully")
-            } catch {
-                print("Speech init error: \(error)")
-                transcribe(error)
+        if authStatus == .notDetermined {
+            print("Requesting speech authorization...")
+            let authorized = await SFSpeechRecognizer.hasAuthorizationToRecognize()
+            print("Speech authorization result: \(authorized)")
+            if !authorized {
+                transcript = "<< Speech recognition not authorized >>"
+                return
             }
+        } else if authStatus == .denied || authStatus == .restricted {
+            print("Speech authorization denied or restricted")
+            transcript = "<< Speech recognition not authorized >>"
+            return
         }
+
+        // Request microphone permission
+        #if os(iOS)
+        let micAuthorized = await AVAudioSession.sharedInstance().hasPermissionToRecord()
+        print("Microphone authorization result: \(micAuthorized)")
+        if !micAuthorized {
+            transcript = "<< Microphone not authorized >>"
+            return
+        }
+        #endif
+
+        print("Speech recognizer initialized successfully")
     }
     
     private func setUpdateHandler(_ handler: @escaping (_ message: String) -> ()) {
