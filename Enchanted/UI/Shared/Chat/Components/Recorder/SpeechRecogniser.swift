@@ -83,29 +83,29 @@ final class SpeechRecognizer: ObservableObject {
         if recognizer != nil {
             return
         }
-        
-        recognizer = SFSpeechRecognizer(locale: Locale.current)
-        guard recognizer != nil else {
+
+        // Try current locale first, then fallback to English
+        let currentLocale = Locale.current
+        recognizer = SFSpeechRecognizer(locale: currentLocale)
+
+        if recognizer == nil || !recognizer!.isAvailable {
+            print("Speech recognizer not available for locale: \(currentLocale.identifier), falling back to English")
+            recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+        }
+
+        guard let rec = recognizer, rec.isAvailable else {
+            print("Speech recognizer not available for any locale")
             transcribe(RecognizerError.nilRecognizer)
             return
         }
-        
+
+        print("Using locale: \(rec.locale.identifier)")
+
         Task {
             do {
-                
-            
                 let authStatus = SFSpeechRecognizer.authorizationStatus()
-                
-                switch authStatus {
-                case .authorized:
-                   print("authorised")
-                case .denied, .restricted, .notDetermined:
-                    print("denicd")
-                @unknown default:
-                    print("wtf")
-                    break
-                }
-                
+                print("Speech auth status: \(authStatus.rawValue)")
+
                 guard await SFSpeechRecognizer.hasAuthorizationToRecognize() else {
                     throw RecognizerError.notAuthorizedToRecognize
                 }
@@ -114,7 +114,9 @@ final class SpeechRecognizer: ObservableObject {
                     throw RecognizerError.notPermittedToRecord
                 }
 #endif
+                print("Speech recognizer initialized successfully")
             } catch {
+                print("Speech init error: \(error)")
                 transcribe(error)
             }
         }
@@ -145,11 +147,13 @@ final class SpeechRecognizer: ObservableObject {
      */
     private func transcribe() {
         guard let recognizer, recognizer.isAvailable else {
+            print("Recognizer not available")
             self.transcribe(RecognizerError.recognizerIsUnavailable)
             return
         }
 
         do {
+            print("Starting speech recognition...")
             let (audioEngine, request) = try Self.prepareEngine { [weak self] buffer in
                 if SilenceTimerManager.isAudioLevelAboveThreshold(buffer: buffer) {
                     self?.silenceTimerManager.reset()
@@ -158,14 +162,21 @@ final class SpeechRecognizer: ObservableObject {
             self.audioEngine = audioEngine
             self.request = request
             self.task = recognizer.recognitionTask(with: request, resultHandler: { [weak self] result, error in
+                if let error = error {
+                    print("Recognition error: \(error.localizedDescription)")
+                }
+                if let result = result {
+                    print("Recognition result: \(result.bestTranscription.formattedString)")
+                }
                 self?.recognitionHandler(audioEngine: audioEngine, result: result, error: error)
             })
             silenceTimerManager.start(onFire: { [weak self] in
                 self?.reset()
                 self?.onAutoStop?()
             })
+            print("Speech recognition started")
         } catch {
-            print("error here")
+            print("Transcribe error: \(error.localizedDescription)")
             self.reset()
             self.transcribe(error)
         }
@@ -193,8 +204,9 @@ final class SpeechRecognizer: ObservableObject {
 
 #if os(iOS) || os(visionOS)
         let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
+        try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
         try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        print("Audio session configured successfully")
 #endif
         let inputNode = audioEngine.inputNode
 

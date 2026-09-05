@@ -64,7 +64,7 @@ struct RecordingView: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
-        .accessibilityLabel("Voice")
+        .accessibilityLabel(isRecording ? "Stop" : "Voice")
         .onChange(of: isRecording) { oldValue, newValue in
             if newValue == false {
                 speechRecognizer.stopTranscribing()
