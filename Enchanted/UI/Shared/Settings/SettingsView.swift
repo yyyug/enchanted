@@ -39,24 +39,24 @@ struct SettingsView: View {
                     Button {
                         presentationMode.wrappedValue.dismiss()
                     } label: {
-                        Text("Cancel")
+                        Text("Cancel", comment: "Cancel button")
                             .font(.system(size: 16))
                             .foregroundStyle(Color(.label))
                     }
-                    
-                    
+
+
                     Spacer()
-                    
+
                     Button(action: save) {
-                        Text("Save")
+                        Text("Save", comment: "Save button")
                             .font(.system(size: 16))
                             .foregroundStyle(Color(.label))
                     }
                 }
-                
+
                 HStack {
                     Spacer()
-                    Text("Settings")
+                    Text("Settings", comment: "Settings title")
                         .font(.system(size: 16))
                         .fontWeight(.medium)
                         .foregroundStyle(Color(.label))
@@ -66,22 +66,22 @@ struct SettingsView: View {
             .padding()
             
             Form {
-                Section(header: Text("Provider").font(.headline)) {
+                Section(header: Text("Provider", comment: "Provider section").font(.headline)) {
                     Picker("Provider", selection: $activeProvider) {
-                        Text("OpenAI Compatible").tag("openAI")
-                        Text("Ollama").tag("ollama")
+                        Text("OpenAI Compatible", comment: "OpenAI provider").tag("openAI")
+                        Text("Ollama", comment: "Ollama provider").tag("ollama")
                     }
                     .pickerStyle(.segmented)
                 }
 
                 if activeProvider == "ollama" {
-                    Section(header: Text("Ollama").font(.headline)) {
+                    Section(header: Text("Ollama", comment: "Ollama section").font(.headline)) {
 
                         TextField("Ollama server URI", text: $ollamaUri, onCommit: checkServer)
                             .textContentType(.URL)
                             .disableAutocorrection(true)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .accessibilityLabel("Ollama server URI")
+                            .accessibilityLabel(NSLocalizedString("Ollama server URI", comment: "Ollama URI label"))
     #if !os(macOS)
                             .padding(.top, 8)
                             .keyboardType(.URL)
@@ -91,17 +91,17 @@ struct SettingsView: View {
                         TextField("Bearer Token", text: $ollamaBearerToken)
                             .disableAutocorrection(true)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .accessibilityLabel("Bearer Token")
+                            .accessibilityLabel(NSLocalizedString("Bearer Token", comment: "Bearer token label"))
     #if os(iOS)
                             .autocapitalization(.none)
     #endif
                         TextField("Ping Interval (seconds)", text: $pingInterval)
                             .disableAutocorrection(true)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .accessibilityLabel("Ping Interval")
+                            .accessibilityLabel(NSLocalizedString("Ping Interval", comment: "Ping interval label"))
                     }
                 } else {
-                    Section(header: Text("OpenAI Compatible").font(.headline)) {
+                    Section(header: Text("OpenAI Compatible", comment: "OpenAI section").font(.headline)) {
 
                         TextField("Base URL", text: $openAIBaseURL, onCommit: checkServer)
                             .textContentType(.URL)
@@ -120,15 +120,15 @@ struct SettingsView: View {
                             .autocapitalization(.none)
     #endif
 
-                        Text("Supports any OpenAI-compatible API (OpenAI, Together, Groq, OpenRouter, local servers, etc.)")
+                        Text("Supports any OpenAI-compatible API (OpenAI, Together, Groq, OpenRouter, local servers, etc.)", comment: "OpenAI compatible info")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
 
-                Section(header: Text("Model Settings").font(.headline)) {
+                Section(header: Text("Model Settings", comment: "Model settings section").font(.headline)) {
                     VStack(alignment: .leading) {
-                        Text("System prompt")
+                        Text("System prompt", comment: "System prompt label")
                         TextEditor(text: $systemPrompt)
                             .font(.system(size: 13))
                             .cornerRadius(4)
@@ -142,7 +142,7 @@ struct SettingsView: View {
                         }
                     } label: {
                         Label {
-                            Text("Default Model")
+                            Text("Default Model", comment: "Default model label")
                         } icon: {
                             Image(activeProvider == "ollama" ? "ollama" : "brain")
                                 .renderingMode(.template)
@@ -154,7 +154,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Section(header: Text("APP").font(.headline).padding(.top, 20)) {
+                Section(header: Text("APP", comment: "App section").font(.headline).padding(.top, 20)) {
 
 #if os(iOS)
                     Toggle(isOn: $vibrations, label: {
@@ -167,7 +167,7 @@ struct SettingsView: View {
 
                 Picker(selection: $colorScheme) {
                     ForEach(AppColorScheme.allCases, id:\.self) { scheme in
-                        Text(scheme.toString).tag(scheme.id)
+                        Text(scheme.localizedName).tag(scheme.id)
                     }
                 } label: {
                     Label("Appearance", systemImage: "sun.max")
@@ -188,9 +188,9 @@ struct SettingsView: View {
                         .foregroundStyle(Color.label)
 
 #if os(macOS)
-                    Text("Download voices by going to Settings > Accessibility > Spoken Content > System Voice > Manage Voices.")
+                    Text("Download voices by going to Settings > Accessibility > Spoken Content > System Voice > Manage Voices.", comment: "Voice download info macOS")
 #else
-                    Text("Download voices by going to Settings > Accessibility > Spoken Content > Voices.")
+                    Text("Download voices by going to Settings > Accessibility > Spoken Content > Voices.", comment: "Voice download info iOS")
 #endif
 
                     Button(action: {
@@ -207,7 +207,7 @@ struct SettingsView: View {
 
                     }) {
 
-                        Text("Open Settings")
+                        Text("Open Settings", comment: "Open settings button")
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
@@ -225,7 +225,7 @@ struct SettingsView: View {
                     HStack {
                         Spacer()
 
-                        Text("Clear All Data")
+                        Text("Clear All Data", comment: "Clear data button")
                             .foregroundStyle(Color(.systemRed))
                             .padding(.vertical, 6)
 
@@ -240,7 +240,7 @@ struct SettingsView: View {
             Button("Delete", role: .destructive) { deleteAll() }
             Button("Cancel", role: .cancel) { }
         } message: {
-            Text("Delete All Conversations?")
+            Text("Delete All Conversations?", comment: "Delete confirmation")
         }
     }
 }

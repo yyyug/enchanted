@@ -147,6 +147,8 @@ final class SpeechRecognizer: ObservableObject {
 
     func stopTranscribing() {
         reset()
+        // Note: Audio routing to speaker is handled by the caller (RecordingView)
+        // to ensure it happens AFTER isRecording is set to false
     }
     
     /**
@@ -200,7 +202,11 @@ final class SpeechRecognizer: ObservableObject {
         audioEngine = nil
         request = nil
         task = nil
+    }
 
+    /// Reset and route audio to speaker (for manual stop only)
+    func resetAndRouteToSpeaker() {
+        reset()
         #if os(iOS)
         try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
         #endif

@@ -1,0 +1,62 @@
+/* Settings */
+"Settings" = "設定";
+"Cancel" = "取消";
+"Save" = "儲存";
+
+/* Provider */
+"Provider" = "供應商";
+"OpenAI Compatible" = "OpenAI 相容";
+"Ollama" = "Ollama";
+
+/* Ollama Settings */
+"Ollama server URI" = "Ollama 伺服器 URI";
+"Bearer Token" = "Bearer 權杖";
+"Ping Interval (seconds)" = "Ping 間隔（秒）";
+
+/* OpenAI Settings */
+"Base URL" = "基礎 URL";
+"API Key" = "API 金鑰";
+"Supports any OpenAI-compatible API (OpenAI, Together, Groq, OpenRouter, local servers, etc.)" = "支援任何 OpenAI 相容 API（OpenAI、Together、Groq、OpenRouter、本地伺服器等）";
+
+/* Model Settings */
+"Model Settings" = "模型設定";
+"System prompt" = "系統提示";
+"Default Model" = "預設模型";
+
+/* App Settings */
+"APP" = "應用程式";
+"Vibrations" = "震動";
+"Appearance" = "外觀";
+"Voice" = "語音";
+"Initials" = "姓名縮寫";
+"Clear All Data" = "清除所有資料";
+"Delete All Conversations?" = "刪除所有對話？";
+"Delete All Conversations?" = "刪除所有對話？";
+"Delete" = "刪除";
+
+/* Auto-speak */
+"Auto-speak Responses" = "自動朗讀回應";
+
+/* Voice Settings */
+"Download voices by going to Settings > Accessibility > Spoken Content > Voices." = "前往設定 > 輔助使用 > 朗讀內容 > 語音以下載語音。";
+"Open Settings" = "開啟設定";
+
+/* Recording */
+"Voice" = "語音";
+"Stop" = "停止";
+
+/* Speech Recognition */
+"<< Speech recognizer not available >>" = "語音辨識器無法使用";
+"<< Speech recognition not authorized >>" = "語音辨識未獲授權";
+"<< Microphone not authorized >>" = "麥克風未獲授權";
+
+/* Appearance */
+"Light" = "淺色";
+"Dark" = "深色";
+"System" = "系統";
+
+/* Errors */
+"Can't initialize speech recognizer" = "無法初始化語音辨識器";
+"Not authorized to recognize speech" = "未獲授權使用語音辨識";
+"Not permitted to record" = "未獲授權錄音";
+"Recognizer is unavailable" = "辨識器無法使用";

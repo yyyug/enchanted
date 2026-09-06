@@ -23,15 +23,19 @@ struct RecordingView: View {
     
     private func toggleTranscribing() async {
         if isRecording {
-            speechRecognizer.stopTranscribing()
+            // Manual stop - route to speaker after stopping
+            speechRecognizer.resetAndRouteToSpeaker()
             onComplete(speechRecognizer.transcript)
             isRecording = false
         } else {
+            // Auto-stop: route to speaker only after isRecording is set to false
             speechRecognizer.onAutoStop = {
                 Task { @MainActor in
                     if isRecording {
                         onComplete(speechRecognizer.transcript)
                         isRecording = false
+                        // Route to speaker after recognition is fully stopped
+                        try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
                     }
                 }
             }
@@ -68,6 +72,8 @@ struct RecordingView: View {
         .onChange(of: isRecording) { oldValue, newValue in
             if newValue == false {
                 speechRecognizer.stopTranscribing()
+                // Route to speaker after recognition is fully stopped
+                try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
             }
         }
     }

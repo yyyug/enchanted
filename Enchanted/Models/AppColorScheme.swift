@@ -25,6 +25,17 @@ enum AppColorScheme: String, Identifiable, CaseIterable {
             "Dark"
         }
     }
+
+    var localizedName: String {
+        switch self {
+        case .system:
+            return NSLocalizedString("System", comment: "System appearance")
+        case .light:
+            return NSLocalizedString("Light", comment: "Light appearance")
+        case .dark:
+            return NSLocalizedString("Dark", comment: "Dark appearance")
+        }
+    }
     
     var toiOSFormat: ColorScheme? {
         switch self {
