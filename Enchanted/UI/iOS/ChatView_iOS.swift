@@ -91,40 +91,44 @@ struct ChatView: View {
                     .renderingMode(.template)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 22)
+                    .frame(width: 24, height: 24)
                     .foregroundColor(Color(.label))
             }
-            
+            .accessibilityLabel("Menu")
+
             Spacer()
-            
+
             ModelSelectorView(
                 modelsList: modelsList,
                 selectedModel: selectedModel,
                 onSelectModel: onSelectModel
             )
             .showIf(!modelsList.isEmpty)
-            
+            .accessibilitySortPriority(1)
+
             Spacer()
-            
+
             Button(action: onNewConversationTap) {
                 Image(systemName: "square.and.pencil")
                     .renderingMode(.template)
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 22)
+                    .frame(width: 24, height: 24)
                     .foregroundColor(Color(.label))
             }
+            .accessibilityLabel(NSLocalizedString("New Conversation", comment: "New conversation button"))
+            .accessibilitySortPriority(0)
         }
     }
     
     var inputFields: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             PhotosPicker(selection: $pickerSelectorActive) {
-                Image(systemName: "photo")
+                Image(systemName: "paperclip")
                     .resizable()
                     .scaledToFit()
                     .foregroundStyle(.foreground)
-                    .frame(height: 19)
+                    .frame(width: 24, height: 24)
             }
             .onChange(of: pickerSelectorActive) {
                 Task {
@@ -136,16 +140,17 @@ struct ChatView: View {
                 }
             }
             .showIf(selectedModel?.supportsImages ?? false)
-            
-            
+            .accessibilityLabel(NSLocalizedString("Attach", comment: "Attach image button"))
+
+
             HStack {
                 SelectedImageView(image: $selectedImage)
-                
+
                 TextField("Message", text: $message, axis: .vertical)
                     .focused($isFocusedInput)
-                    .frame(minHeight: 40)
+                    .frame(minHeight: 44)
                     .font(.system(size: 14))
-                
+
                 RecordingView(speechRecognizer: speechRecognizer, isRecording: $isRecording.animation()) { transcription in
                     self.message = transcription
                 }
@@ -163,14 +168,16 @@ struct ChatView: View {
                         style: StrokeStyle(lineWidth: isRecording ? 2 : 0.5)
                     )
             )
-            
+
             switch conversationState {
             case .loading:
                 SimpleFloatingButton(systemImage: "square.fill", onClick: onStopGenerateTap)
-                    .frame(width: 12)
+                    .frame(width: 28, height: 28)
+                    .accessibilityLabel(NSLocalizedString("Stop", comment: "Stop generation button"))
             default:
                 SimpleFloatingButton(systemImage: "paperplane.fill", onClick: onMessageSubmit)
-                    .frame(width: 18)
+                    .frame(width: 28, height: 28)
+                    .accessibilityLabel(NSLocalizedString("Send", comment: "Send message button"))
             }
         }
         .contentShape(Rectangle())
