@@ -63,3 +63,10 @@
 "Not authorized to recognize speech" = "未獲授權使用語音辨識";
 "Not permitted to record" = "未獲授權錄音";
 "Recognizer is unavailable" = "辨識器無法使用";
+
+/* Additional UI Elements */
+"Auto" = "自動";
+"Chat" = "對話";
+"New Chat" = "新對話";
+"Send" = "發送";
+"Type a message..." = "輸入訊息...";

@@ -28,13 +28,14 @@ struct RecordingView: View {
             onComplete(speechRecognizer.transcript)
             isRecording = false
         } else {
-            // Auto-stop
+            // Auto-stop handler
             speechRecognizer.onAutoStop = {
                 Task { @MainActor in
-                    if isRecording {
-                        onComplete(speechRecognizer.transcript)
-                        isRecording = false
-                    }
+                    print("Auto-stop triggered")
+                    onComplete(speechRecognizer.transcript)
+                    isRecording = false
+                    // Force UI update
+                    speechRecognizer.objectWillChange.send()
                 }
             }
             speechRecognizer.resetTranscript()

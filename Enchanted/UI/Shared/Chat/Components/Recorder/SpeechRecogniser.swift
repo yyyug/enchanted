@@ -11,7 +11,7 @@ import Speech
 
 final class SilenceTimerManager {
     private var silenceTimer: Timer?
-    private let silenceTimeout: TimeInterval = 1.5
+    private let silenceTimeout: TimeInterval = 3.0  // Increased from 1.5s to 3.0s
     private var onFire: (() -> Void)?
 
     func start(onFire: @escaping () -> Void) {
@@ -43,7 +43,8 @@ final class SilenceTimerManager {
             sum += abs(channelData[i])
         }
         let averageLevel = sum / Float(frameLength)
-        return averageLevel > 0.01
+        // Lower threshold to be less sensitive (was 0.01)
+        return averageLevel > 0.005
     }
 }
 
