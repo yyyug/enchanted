@@ -15,9 +15,9 @@ struct ReadingAloudView: View {
         HStack {
 
             Image(systemName: "speaker.wave.3")
-                .symbolEffect(UIAccessibility.isReduceMotionEnabled ? .none : .variableColor.iterative, options: .repeat(100), value: animationsRunning)
                 .scaledToFit()
                 .frame(width: 18)
+                .symbolEffect(UIAccessibility.isReduceMotionEnabled ? nil : .variableColor.iterative, options: .repeat(100), value: animationsRunning)
 
             Text("Reading Aloud")
                 .font(.subheadline)
