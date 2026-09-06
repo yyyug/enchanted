@@ -20,6 +20,7 @@ struct SettingsView: View {
     @Binding var pingInterval: String
     @Binding var autoSpeak: Bool
     @Binding var voiceIdentifier: String
+    @Binding var speechRecognitionLanguage: String
     @Binding var activeProvider: String
     @Binding var openAIBaseURL: String
     @Binding var openAIApiKey: String
@@ -212,6 +213,24 @@ struct SettingsView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
 
+                // Speech Recognition Language Picker
+                Picker(selection: $speechRecognitionLanguage) {
+                    Text("Auto (Device Language)", comment: "Auto language option").tag("auto")
+                    Text("中文繁體 (繁體中文)", comment: "Chinese Traditional").tag("zh-Hant")
+                    Text("中文簡體 (簡體中文)", comment: "Chinese Simplified").tag("zh-Hans")
+                    Text("中文 (香港)", comment: "Chinese Hong Kong").tag("zh-HK")
+                    Text("English (US)", comment: "English US").tag("en-US")
+                    Text("English (UK)", comment: "English UK").tag("en-GB")
+                    Text("日本語", comment: "Japanese").tag("ja-JP")
+                    Text("한국어", comment: "Korean").tag("ko-KR")
+                    Text("Español", comment: "Spanish").tag("es-ES")
+                    Text("Français", comment: "French").tag("fr-FR")
+                    Text("Deutsch", comment: "German").tag("de-DE")
+                } label: {
+                    Label("Speech Recognition Language", systemImage: "mic")
+                        .foregroundStyle(Color.label)
+                }
+
 
                 TextField("Initials", text: $appUserInitials)
                     .disableAutocorrection(true)
@@ -255,9 +274,10 @@ struct SettingsView: View {
         ollamaBearerToken: .constant("x"),
         appUserInitials: .constant("AM"),
         pingInterval: .constant("5"),
-         autoSpeak: .constant(false),
-         voiceIdentifier: .constant("sample"),
-        activeProvider: .constant("ollama"), 
+        autoSpeak: .constant(false),
+        voiceIdentifier: .constant("sample"),
+        speechRecognitionLanguage: .constant("auto"),
+        activeProvider: .constant("ollama"),
         openAIBaseURL: .constant("https://api.openai.com/v1"),
         openAIApiKey: .constant(""),
         save: {},

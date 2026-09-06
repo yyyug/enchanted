@@ -31,11 +31,14 @@
 "Initials" = "姓名縮寫";
 "Clear All Data" = "清除所有資料";
 "Delete All Conversations?" = "刪除所有對話？";
-"Delete All Conversations?" = "刪除所有對話？";
 "Delete" = "刪除";
 
 /* Auto-speak */
 "Auto-speak Responses" = "自動朗讀回應";
+
+/* Speech Recognition Language */
+"Speech Recognition Language" = "語音辨識語言";
+"Auto (Device Language)" = "自動（裝置語言）";
 
 /* Voice Settings */
 "Download voices by going to Settings > Accessibility > Spoken Content > Voices." = "前往設定 > 輔助使用 > 朗讀內容 > 語音以下載語音。";

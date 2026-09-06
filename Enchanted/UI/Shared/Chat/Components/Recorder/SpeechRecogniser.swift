@@ -87,6 +87,13 @@ final class SpeechRecognizer: ObservableObject {
         if identifier.hasPrefix("zh") {
             // Chinese Traditional (Hong Kong, Taiwan, Macau)
             if identifier.contains("Hant") || identifier.contains("HK") || identifier.contains("TW") || identifier.contains("MO") {
+                // Try zh-HK first for Hong Kong, then fall back to zh-Hant
+                if identifier.contains("HK") {
+                    let hkLocale = Locale(identifier: "zh-HK")
+                    if SFSpeechRecognizer.supportedLocales().contains(hkLocale) {
+                        return hkLocale
+                    }
+                }
                 return Locale(identifier: "zh-Hant")
             }
             // Chinese Simplified (China, Singapore, Malaysia)
@@ -102,8 +109,20 @@ final class SpeechRecognizer: ObservableObject {
     }
 
     func userInit() async {
+        // Check for user-specified speech recognition language override
+        let savedLanguage = UserDefaults.standard.string(forKey: "speechRecognitionLanguage") ?? "auto"
+        if !savedLanguage.isEmpty && savedLanguage != "auto" {
+            recognizer = SFSpeechRecognizer(locale: Locale(identifier: savedLanguage))
+            print("Using user-specified speech language: \(savedLanguage)")
+        }
+
         if recognizer != nil {
-            return
+            // Verify the recognizer is available
+            if recognizer!.isAvailable {
+                return
+            }
+            // If not available, fall through to default
+            recognizer = nil
         }
 
         // Get appropriate locale for speech recognition
@@ -225,14 +244,6 @@ final class SpeechRecognizer: ObservableObject {
         audioEngine = nil
         request = nil
         task = nil
-    }
-
-    /// Reset and route audio to speaker (for manual stop only)
-    func resetAndRouteToSpeaker() {
-        reset()
-        #if os(iOS)
-        try? AVAudioSession.sharedInstance().overrideOutputAudioPort(.speaker)
-        #endif
     }
 
     private static func prepareEngine(onBuffer: @escaping (AVAudioPCMBuffer) -> Void) throws -> (AVAudioEngine, SFSpeechAudioBufferRecognitionRequest) {
