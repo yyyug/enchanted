@@ -79,17 +79,40 @@ final class SpeechRecognizer: ObservableObject {
      Initializes a new speech recognizer. If this is the first time you've used the class, it
      requests access to the speech recognizer and the microphone.
      */
+    /// Get the appropriate locale for speech recognition based on device locale
+    private func getSpeechRecognitionLocale(from locale: Locale) -> Locale {
+        let identifier = locale.identifier
+
+        // Check for Chinese locales
+        if identifier.hasPrefix("zh") {
+            // Chinese Traditional (Hong Kong, Taiwan, Macau)
+            if identifier.contains("Hant") || identifier.contains("HK") || identifier.contains("TW") || identifier.contains("MO") {
+                return Locale(identifier: "zh-Hant")
+            }
+            // Chinese Simplified (China, Singapore, Malaysia)
+            if identifier.contains("Hans") || identifier.contains("CN") || identifier.contains("SG") {
+                return Locale(identifier: "zh-Hans")
+            }
+            // Default to Traditional Chinese for any other zh variant
+            return Locale(identifier: "zh-Hant")
+        }
+
+        // For other locales, use as-is
+        return locale
+    }
+
     func userInit() async {
         if recognizer != nil {
             return
         }
 
-        // Try current locale first, then fallback to English
+        // Get appropriate locale for speech recognition
         let currentLocale = Locale.current
-        recognizer = SFSpeechRecognizer(locale: currentLocale)
+        let speechLocale = getSpeechRecognitionLocale(from: currentLocale)
+        recognizer = SFSpeechRecognizer(locale: speechLocale)
 
         if recognizer == nil || !recognizer!.isAvailable {
-            print("Speech recognizer not available for locale: \(currentLocale.identifier), falling back to English")
+            print("Speech recognizer not available for locale: \(speechLocale.identifier), falling back to English")
             recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
         }
 
