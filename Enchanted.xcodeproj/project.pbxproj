@@ -193,8 +193,8 @@
 		FFEC32962B24779B003E5C04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FFEC32982B24779B003E5C04 /* Enchanted.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Enchanted.entitlements; sourceTree = "<group>"; };
 		FFEC329A2B24779B003E5C04 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		A1B2C3D4E5F60001 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		FFEC32A92B24797C003E5C04 /* ChatView_iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView_iOS.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60001 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		FFEC9BDE2B8131B900AFBA63 /* HotKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeys.swift; sourceTree = "<group>"; };
 		FFEC9BE02B81327B00AFBA63 /* DragAndDrop.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DragAndDrop.swift; sourceTree = "<group>"; };
 		FFEC9BE22B81358800AFBA63 /* DeallocPrinter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DeallocPrinter.swift; sourceTree = "<group>"; };
