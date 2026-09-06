@@ -11,7 +11,7 @@ import Speech
 
 final class SilenceTimerManager {
     private var silenceTimer: Timer?
-    private let silenceTimeout: TimeInterval = 3.0  // Increased from 1.5s to 3.0s
+    private let silenceTimeout: TimeInterval = 2.0  // 2 seconds silence before auto-stop
     private var onFire: (() -> Void)?
 
     func start(onFire: @escaping () -> Void) {
