@@ -192,7 +192,8 @@
 		FFEC32902B24779A003E5C04 /* EnchantedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnchantedApp.swift; sourceTree = "<group>"; };
 		FFEC32962B24779B003E5C04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FFEC32982B24779B003E5C04 /* Enchanted.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Enchanted.entitlements; sourceTree = "<group>"; };
-		FFEC329A2B24779B003E5C04 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+    FFEC329A2B24779B003E5C04 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+        A1B2C3D4E5F60001 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		FFEC32A92B24797C003E5C04 /* ChatView_iOS.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView_iOS.swift; sourceTree = "<group>"; };
 		FFEC9BDE2B8131B900AFBA63 /* HotKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotKeys.swift; sourceTree = "<group>"; };
 		FFEC9BE02B81327B00AFBA63 /* DragAndDrop.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DragAndDrop.swift; sourceTree = "<group>"; };
@@ -454,27 +455,28 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		FFEC328F2B24779A003E5C04 /* Enchanted */ = {
-			isa = PBXGroup;
-			children = (
-				FF9C92072BF0B464004C8275 /* EnchantedDebug.entitlements */,
-				FFEC32982B24779B003E5C04 /* Enchanted.entitlements */,
-				FFE2C8222B9A657A00BD82F3 /* Accessibility.plist */,
-				FFBBF4822B348345008D611C /* Info.plist */,
-				FFEC32962B24779B003E5C04 /* Assets.xcassets */,
-				FFEC32A12B24783B003E5C04 /* Application */,
-				FFEC32A22B247858003E5C04 /* Extensions */,
-				FF464B142B80BB9C008E5130 /* Helpers */,
-				FFEC32A32B24786D003E5C04 /* Models */,
-				FFEC32992B24779B003E5C04 /* Preview Content */,
-				FFEC32A42B247874003E5C04 /* Services */,
-				FF1002422B25BAC50011A4DC /* Stores */,
-				FF1002412B25BAAE0011A4DC /* SwiftData */,
-				FFEC32A52B247879003E5C04 /* UI */,
-			);
-			path = Enchanted;
-			sourceTree = "<group>";
-		};
+        FFEC328F2B24779A003E5C04 /* Enchanted */ = {
+            isa = PBXGroup;
+            children = (
+                FF9C92072BF0B464004C8275 /* EnchantedDebug.entitlements */,
+                FFEC32982B24779B003E5C04 /* Enchanted.entitlements */,
+                FFE2C8222B9A657A00BD82F3 /* Accessibility.plist */,
+                FFBBF4822B348345008D611C /* Info.plist */,
+                FFEC32962B24779B003E5C04 /* Assets.xcassets */,
+                A1B2C3D4E5F60001 /* Localizable.strings */,
+                FFEC32A12B24783B003E5C04 /* Application */,
+                FFEC32A22B247858003E5C04 /* Extensions */,
+                FF464B142B80BB9C008E5130 /* Helpers */,
+                FFEC32A32B24786D003E5C04 /* Models */,
+                FFEC32992B24779B003E5C04 /* Preview Content */,
+                FFEC32A42B247874003E5C04 /* Services */,
+                FF1002422B25BAC50011A4DC /* Stores */,
+                FF1002412B25BAAE0011A4DC /* SwiftData */,
+                FFEC32A52B247879003E5C04 /* UI */,
+            );
+            path = Enchanted;
+            sourceTree = "<group>";
+        };
 		FFEC32992B24779B003E5C04 /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
@@ -622,6 +624,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				zh-Hant,
 				Base,
 			);
 			mainGroup = FFEC32842B24779A003E5C04;
@@ -645,18 +648,19 @@
 		};
 /* End PBXProject section */
 
-/* Begin PBXResourcesBuildPhase section */
-		FFEC328B2B24779A003E5C04 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				FFEC329B2B24779B003E5C04 /* Preview Assets.xcassets in Resources */,
-				FFE2C8232B9A657A00BD82F3 /* Accessibility.plist in Resources */,
-				FFEC32972B24779B003E5C04 /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
+    /* Begin PBXResourcesBuildPhase section */
+        FFEC328B2B24779A003E5C04 /* Resources */ = {
+            isa = PBXResourcesBuildPhase;
+            buildActionMask = 2147483647;
+            files = (
+                FFEC329B2B24779B003E5C04 /* Preview Assets.xcassets in Resources */,
+                FFE2C8232B9A657A00BD82F3 /* Accessibility.plist in Resources */,
+                FFEC32972B24779B003E5C04 /* Assets.xcassets in Resources */,
+                A1B2C3D4E5F60001 /* Localizable.strings in Resources */,
+            );
+            runOnlyForDeploymentPostprocessing = 0;
+        };
+    /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		FFEC32892B24779A003E5C04 /* Sources */ = {
