@@ -38,6 +38,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-derived-
 
+      - name: Add Localization to Project
+        run: |
+          # Install xcodeproj gem and add localization
+          gem install xcodeproj --no-document
+          ruby -e '
+            require "xcodeproj"
+            project_path = "Enchanted.xcodeproj"
+            project = Xcodeproj::Project.open(project_path)
+
+            # Find or create localization group
+            main_group = project.main_group
+            lproj_group = main_group.groups.find { |g| g.name == "Localizable" }
+            unless lproj_group
+              lproj_group = main_group.new_group("Localizable", "Localizable")
+            end
+
+            # Add zh-Hant localization
+            zh_hant_path = "zh-Hant.lproj/Localizable.strings"
+            unless lproj_group.files.find { |f| f.path == zh_hant_path }
+              file_ref = lproj_group.new_file(zh_hant_path)
+              file_ref.last_known_file_type = "text.plist.strings"
+
+              # Add to resources build phase
+              target = project.targets.first
+              target.resources_build_phase.add_file_reference(file_ref)
+            end
+
+            # Add known region
+            project.attributes["knownRegions"] = ["en", "zh-Hant", "Base"] unless project.attributes["knownRegions"]&.include?("zh-Hant")
+
+            project.save
+            print "Localization added successfully"
+          ' || echo "Warning: Could not add localization (xcodeproj gem may not be available)"
+
       - name: Build Archive
         run: |
           xcodebuild archive \
