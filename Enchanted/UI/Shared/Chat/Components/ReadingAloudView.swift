@@ -14,10 +14,16 @@ struct ReadingAloudView: View {
     var body: some View {
         HStack {
 
-            Image(systemName: "speaker.wave.3")
-                .scaledToFit()
-                .frame(width: 18)
-                .symbolEffect(UIAccessibility.isReduceMotionEnabled ? nil : .variableColor.iterative, options: .repeat(100), value: animationsRunning)
+            if UIAccessibility.isReduceMotionEnabled {
+                Image(systemName: "speaker.wave.3")
+                    .scaledToFit()
+                    .frame(width: 18)
+            } else {
+                Image(systemName: "speaker.wave.3")
+                    .scaledToFit()
+                    .frame(width: 18)
+                    .symbolEffect(.variableColor.iterative, options: .repeat(100), value: animationsRunning)
+            }
 
             Text("Reading Aloud")
                 .font(.subheadline)
