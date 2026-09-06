@@ -201,7 +201,6 @@
 		FFFD00C12B92607800392AE6 /* CompletionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionsStore.swift; sourceTree = "<group>"; };
 		B72E20388BB1459D8FFA5702 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
 		87365B6CE5C9467296725F32 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F60001 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -463,7 +462,6 @@
 				FFE2C8222B9A657A00BD82F3 /* Accessibility.plist */,
 				FFBBF4822B348345008D611C /* Info.plist */,
 				FFEC32962B24779B003E5C04 /* Assets.xcassets */,
-				A1B2C3D4E5F60001 /* Localizable.strings */,
 				FFEC32A12B24783B003E5C04 /* Application */,
 				FFEC32A22B247858003E5C04 /* Extensions */,
 				FF464B142B80BB9C008E5130 /* Helpers */,
@@ -624,7 +622,6 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
-				zh-Hant,
 				Base,
 			);
 			mainGroup = FFEC32842B24779A003E5C04;
@@ -656,7 +653,6 @@
 				FFEC329B2B24779B003E5C04 /* Preview Assets.xcassets in Resources */,
 				FFE2C8232B9A657A00BD82F3 /* Accessibility.plist in Resources */,
 				FFEC32972B24779B003E5C04 /* Assets.xcassets in Resources */,
-				A1B2C3D4E5F60001 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
