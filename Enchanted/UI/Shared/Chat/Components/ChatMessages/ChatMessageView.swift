@@ -64,7 +64,7 @@ struct ChatMessageView: View {
                     if message.hasThink {
                         HStack(spacing: 10.0, content: {
                             Rectangle()
-                                .fill(Color.black)
+                                .fill(Color.primary)
                                 .frame(width: 10)
                             if showThink {
                                 if let think = message.think {
@@ -77,9 +77,11 @@ struct ChatMessageView: View {
                                 }
                             } else {
                                 if message.thinkComplete {
-                                    Text("Thought for a few seconds.")
+                                    Text(NSLocalizedString("Thought for a few seconds.", comment: "Thought complete"))
+                                        .font(.subheadline)
                                 } else {
-                                    Text("Thinking...")
+                                    Text(NSLocalizedString("Thinking...", comment: "Thinking indicator"))
+                                        .font(.subheadline)
                                 }
                             }
                         }).fixedSize(horizontal: false, vertical: true)
@@ -87,6 +89,7 @@ struct ChatMessageView: View {
                           .onTapGesture {
                               showThink = !showThink
                           }
+                          .accessibilityAddTraits(.isHeader)
                     }
                     if let content = message.realContent {
                         Markdown(content)
@@ -124,7 +127,8 @@ struct ChatMessageView: View {
                 }
                 .buttonStyle(GrowingButton())
                 .clipShape(RoundedRectangle(cornerRadius: 10))
-                
+                .accessibilityLabel(NSLocalizedString("Copy", comment: "Copy message button"))
+
                 /// Play button
                 Button(action: {
                     Task {
@@ -142,7 +146,8 @@ struct ChatMessageView: View {
                 .buttonStyle(GrowingButton())
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .showIf(!isSpeaking)
-                
+                .accessibilityLabel(NSLocalizedString("Read Aloud", comment: "Read aloud button"))
+
                 /// Stop button
                 Button(action: {
                     Task {
@@ -157,7 +162,8 @@ struct ChatMessageView: View {
                 .buttonStyle(GrowingButton())
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .showIf(isSpeaking)
-                
+                .accessibilityLabel(NSLocalizedString("Stop Reading", comment: "Stop reading button"))
+
                 /// Edit button
                 Button(action: {editMessage = message}) {
                     Image(systemName: "pencil")
@@ -166,15 +172,20 @@ struct ChatMessageView: View {
                 .buttonStyle(GrowingButton())
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .showIf(message.role == "user")
+                .accessibilityLabel(NSLocalizedString("Edit", comment: "Edit message button"))
             }
             .opacity(mouseHover ? 1 : 0.0001)
-            
+
 #endif
         }
 #if os(macOS)
         .onHover { over in
-            withAnimation(.easeInOut(duration: 0.3)) {
+            if UIAccessibility.isReduceMotionEnabled {
                 mouseHover = over
+            } else {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    mouseHover = over
+                }
             }
         }
 #endif

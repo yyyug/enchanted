@@ -73,6 +73,12 @@
 "Attach" = "附件";
 "New Conversation" = "新對話";
 "Menu" = "選單";
+"Copy" = "複製";
+"Read Aloud" = "朗讀";
+"Stop Reading" = "停止朗讀";
+"Edit" = "編輯";
+"Thought for a few seconds." = "思考了幾秒鐘。";
+"Thinking..." = "思考中...";
 "Select Text" = "選擇文字";
 "Shortcuts" = "快捷鍵";
 "Close" = "關閉";

@@ -10,27 +10,28 @@ import SwiftUI
 struct ReadingAloudView: View {
     var onStopTap: () -> ()
     @State private var animationsRunning = false
-    
+
     var body: some View {
         HStack {
-            
+
             Image(systemName: "speaker.wave.3")
-                .symbolEffect(.variableColor.iterative,  options: .repeat(100), value: animationsRunning)
+                .symbolEffect(UIAccessibility.isReduceMotionEnabled ? .none : .variableColor.iterative, options: .repeat(100), value: animationsRunning)
                 .scaledToFit()
                 .frame(width: 18)
-            
+
             Text("Reading Aloud")
-                .font(.system(size: 14))
-            
+                .font(.subheadline)
+
             Spacer()
-            
+
             Button(action: onStopTap) {
                 Image(systemName: "stop.fill")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .padding(5)
             }
             .buttonStyle(GrowingButton())
-            
+            .accessibilityLabel(NSLocalizedString("Stop Reading", comment: "Stop reading button"))
+
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
@@ -39,7 +40,7 @@ struct ReadingAloudView: View {
         }
         .padding()
         .onAppear {
-            animationsRunning = true
+            animationsRunning = !UIAccessibility.isReduceMotionEnabled
         }
     }
 }

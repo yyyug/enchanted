@@ -10,26 +10,27 @@ import ActivityIndicatorView
 
 struct UnreachableAPIView: View {
     @State private var showSettings = false
-    
+
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Ollama is unreachable. Go to Settings and update your Ollama API endpoint.")
                     .lineLimit(nil)
                     .fontWeight(.medium)
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(Color(.label))
+                    .accessibilityLabel(Text("Ollama is unreachable. Go to Settings and update your Ollama API endpoint."))
             }
-            
+
             Spacer()
-            
+
             ActivityIndicatorView(isVisible: .constant(true), type: .growingCircle)
                 .frame(width: 21, height: 21)
                 .accessibilityLabel(Text("Checking Ollama connection"))
-            
+
             Button(action: { showSettings.toggle() }) {
                 Label("Settings", systemImage: "gearshape")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.white)
             }
             .padding(.horizontal, 10)

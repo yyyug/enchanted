@@ -10,3 +10,5 @@
 - Uses Python with the uv package manager for project dependency management. Confidence: 0.6
 - Prefers shared/common settings UI across LLM providers rather than duplicating controls per provider. Confidence: 0.6
 - Prefers toggle controls to appear before related selectors/pickers in settings UI (e.g., enable toggle before voice picker). Confidence: 0.5
+- Values comprehensive accessibility in SwiftUI apps, including accessibility labels on all buttons, Dynamic Type support, Reduce Motion checks, adaptive colors, and header traits. Confidence: 0.7
+- Values following industry best practices in iOS/SwiftUI development beyond just accessibility. Confidence: 0.6
