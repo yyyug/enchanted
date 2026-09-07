@@ -1,0 +1,110 @@
+/* Settings */
+"Settings" = "设置";
+"Cancel" = "取消";
+"Save" = "保存";
+
+/* Provider */
+"Provider" = "供应商";
+"OpenAI Compatible" = "OpenAI 兼容";
+"Ollama" = "Ollama";
+
+/* Ollama Settings */
+"Ollama server URI" = "Ollama 服务器 URI";
+"Bearer Token" = "Bearer 令牌";
+"Ping Interval (seconds)" = "Ping 间隔（秒）";
+
+/* OpenAI Settings */
+"Base URL" = "基础 URL";
+"API Key" = "API 密钥";
+"Supports any OpenAI-compatible API (OpenAI, Together, Groq, OpenRouter, local servers, etc.)" = "支持任何 OpenAI 兼容 API（OpenAI、Together、Groq、OpenRouter、本地服务器等）";
+
+/* Model Settings */
+"Model Settings" = "模型设置";
+"System prompt" = "系统提示";
+"Default Model" = "默认模型";
+
+/* App Settings */
+"APP" = "应用程序";
+"Vibrations" = "震动";
+"Appearance" = "外观";
+"Voice" = "语音";
+"Initials" = "姓名缩写";
+"Clear All Data" = "清除所有数据";
+"Delete All Conversations?" = "删除所有对话？";
+"Delete" = "删除";
+
+/* Auto-speak */
+"Auto-speak Responses" = "自动朗读回应";
+
+/* Speech Recognition Language */
+"Speech Recognition Language" = "语音识别语言";
+"Auto (Device Language)" = "自动（设备语言）";
+
+/* Voice Settings */
+"Download voices by going to Settings > Accessibility > Spoken Content > Voices." = "前往设置 > 辅助使用 > 朗读内容 > 语音以下载语音。";
+"Open Settings" = "打开设置";
+
+/* Recording */
+"Voice" = "语音";
+"Stop" = "停止";
+
+/* Speech Recognition */
+"<< Speech recognizer not available >>" = "语音识别器无法使用";
+"<< Speech recognition not authorized >>" = "语音识别未获授权";
+"<< Microphone not authorized >>" = "麦克风未获授权";
+
+/* Appearance */
+"Light" = "浅色";
+"Dark" = "深色";
+"System" = "系统";
+
+/* Errors */
+"Can't initialize speech recognizer" = "无法初始化语音识别器";
+"Not authorized to recognize speech" = "未获授权使用语音识别";
+"Not permitted to record" = "未获授权录音";
+"Recognizer is unavailable" = "识别器无法使用";
+
+/* Additional UI Elements */
+"Auto" = "自动";
+"Chat" = "对话";
+"New Chat" = "新对话";
+"Send" = "发送";
+"Type a message..." = "输入消息...";
+"Attach" = "附件";
+"New Conversation" = "新对话";
+"Menu" = "菜单";
+"Copy" = "复制";
+"Read Aloud" = "朗读";
+"Stop Reading" = "停止朗读";
+"Edit" = "编辑";
+"Thought for a few seconds." = "思考了几秒钟。";
+"Thinking..." = "思考中...";
+"Select Text" = "选择文字";
+"Shortcuts" = "快捷键";
+"Close" = "关闭";
+"Completions" = "完成";
+"New Completion" = "新完成";
+"Create your own dynamic prompts usable anywhere on your mac with keyboard shortcuts to speed up common tasks. You can reorder, delete and edit your completions." = "创建您自己的动态提示，可以在 Mac 上的任何位置使用快捷键来加速常见任务。您可以重新排序、删除和编辑您的完成。";
+"Completions require Accessibility access to capture selected text outside Enchanted." = "完成需要辅助使用权限来获取 Enchanted 外部的选中文本。";
+"Open Privacy Settings" = "打开隐私设置";
+"This model does not support images. Supported models are llava, bakllava and llama vision." = "此模型不支持图片。支持的模型为 llava、bakllava 和 llama vision。";
+"Drop your image here" = "将您的图片拖拽到此处";
+"Enchanted" = "Enchanted";
+"TAB" = "TAB";
+"Your Command" = "您的指令";
+"Tap" = "点按";
+"to begin" = "开始";
+"Respond in **App**." = "在 **App** 中回应。";
+"Respond in current **Window**." = "在当前 **Window** 中回应。";
+"to switch" = "切换";
+"Copy Chat" = "复制对话";
+"Copy Chat as JSON" = "复制对话为 JSON";
+"Events" = "事件";
+"Thought for a few seconds." = "思考了几秒钟。";
+"Thinking..." = "思考中...";
+"Instruction Prompt gets appended before the selected text and together sent to the LLM." = "指令提示会附加在选中文本之前，一起发送到 LLM。";
+"Only single character keyboard shortcuts allowed." = "仅允许单字符键盘快捷键。";
+"Ollama is unreachable. Go to Settings and update your Ollama API endpoint." = "Ollama 无法连接。请前往设置并更新您的 Ollama API 端点。";
+"Checking Ollama connection" = "检查 Ollama 连接中";
+"Open settings" = "打开设置";
+"Reading Aloud" = "朗读中";

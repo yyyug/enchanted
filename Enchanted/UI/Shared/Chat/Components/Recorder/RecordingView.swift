@@ -54,20 +54,21 @@ struct RecordingView: View {
                         .resizable()
                         .scaledToFit()
                         .foregroundColor(.white)
-                        .frame(width: 8)
+                        .frame(width: 14)
                 }
                 .clipShape(Circle())
-                .frame(width: 20, height: 20)
+                .frame(width: 44, height: 44)
             } else {
                 Image(systemName: "waveform")
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 20)
+                    .frame(width: 24, height: 24)
                     .foregroundStyle(Color(.systemGray))
+                    .frame(width: 44, height: 44)
             }
         }
         .buttonStyle(PlainButtonStyle())
-        .accessibilityLabel(isRecording ? "Stop" : "Voice")
+        .accessibilityLabel(isRecording ? NSLocalizedString("Stop", comment: "Stop recording") : NSLocalizedString("Voice", comment: "Voice input"))
         .onChange(of: isRecording) { oldValue, newValue in
             if newValue == false {
                 speechRecognizer.stopTranscribing()

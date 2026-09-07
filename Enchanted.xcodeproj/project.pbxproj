@@ -623,6 +623,8 @@
 			knownRegions = (
 				en,
 				Base,
+				zh-Hant,
+				zh-HK,
 			);
 			mainGroup = FFEC32842B24779A003E5C04;
 			packageReferences = (

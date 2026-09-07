@@ -128,7 +128,8 @@ struct ChatView: View {
                     .resizable()
                     .scaledToFit()
                     .foregroundStyle(.foreground)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 22, height: 22)
+                    .frame(width: 44, height: 44)
             }
             .onChange(of: pickerSelectorActive) {
                 Task {
@@ -143,10 +144,10 @@ struct ChatView: View {
             .accessibilityLabel(NSLocalizedString("Attach", comment: "Attach image button"))
 
 
-            HStack {
+            HStack(spacing: 4) {
                 SelectedImageView(image: $selectedImage)
 
-                TextField("Message", text: $message, axis: .vertical)
+                TextField(NSLocalizedString("Type a message...", comment: "Message input placeholder"), text: $message, axis: .vertical)
                     .focused($isFocusedInput)
                     .frame(minHeight: 44)
                     .font(.system(size: 14))
@@ -160,9 +161,9 @@ struct ChatView: View {
                     isFocusedInput = newValue
                 }
             })
-            .padding(.horizontal)
+            .padding(.horizontal, 12)
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
+                RoundedRectangle(cornerRadius: 22)
                     .strokeBorder(
                         isRecording ? Color(.systemBlue) : Color(.systemGray2),
                         style: StrokeStyle(lineWidth: isRecording ? 2 : 0.5)
@@ -172,11 +173,11 @@ struct ChatView: View {
             switch conversationState {
             case .loading:
                 SimpleFloatingButton(systemImage: "square.fill", onClick: onStopGenerateTap)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 44, height: 44)
                     .accessibilityLabel(NSLocalizedString("Stop", comment: "Stop generation button"))
             default:
                 SimpleFloatingButton(systemImage: "paperplane.fill", onClick: onMessageSubmit)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 44, height: 44)
                     .accessibilityLabel(NSLocalizedString("Send", comment: "Send message button"))
             }
         }
