@@ -18,8 +18,7 @@ struct SelectTextSheet: View {
         VStack {
             ZStack {
                 Text("Select Text")
-                    .font(.system(size: 16))
-                    .fontWeight(.bold)
+                    .font(.headline)
                 
                 HStack {
                     Spacer()

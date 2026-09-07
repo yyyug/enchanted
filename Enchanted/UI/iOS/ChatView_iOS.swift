@@ -150,7 +150,7 @@ struct ChatView: View {
                 TextField(NSLocalizedString("Type a message...", comment: "Message input placeholder"), text: $message, axis: .vertical)
                     .focused($isFocusedInput)
                     .frame(minHeight: 44)
-                    .font(.system(size: 14))
+                    .font(.body)
 
                 RecordingView(speechRecognizer: speechRecognizer, isRecording: $isRecording.animation()) { transcription in
                     self.message = transcription

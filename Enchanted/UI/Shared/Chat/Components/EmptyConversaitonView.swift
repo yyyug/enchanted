@@ -89,7 +89,7 @@ struct EmptyConversaitonView: View, KeyboardReadable {
         }) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(prompt.prompt)
-                    .font(.system(size: 15))
+                    .font(.callout)
                     .foregroundStyle(Color.labelCustom)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)

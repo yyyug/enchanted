@@ -32,6 +32,8 @@
 "Clear All Data" = "清除所有数据";
 "Delete All Conversations?" = "删除所有对话？";
 "Delete" = "删除";
+"Delete All" = "全部删除";
+"Select Model" = "选择模型";
 
 /* Auto-speak */
 "Auto-speak Responses" = "自动朗读回应";

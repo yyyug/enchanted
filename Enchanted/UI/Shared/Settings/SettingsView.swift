@@ -41,7 +41,7 @@ struct SettingsView: View {
                         presentationMode.wrappedValue.dismiss()
                     } label: {
                         Text("Cancel", comment: "Cancel button")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(Color(.label))
                     }
 
@@ -50,7 +50,7 @@ struct SettingsView: View {
 
                     Button(action: save) {
                         Text("Save", comment: "Save button")
-                            .font(.system(size: 16))
+                            .font(.body)
                             .foregroundStyle(Color(.label))
                     }
                 }
@@ -58,8 +58,7 @@ struct SettingsView: View {
                 HStack {
                     Spacer()
                     Text("Settings", comment: "Settings title")
-                        .font(.system(size: 16))
-                        .fontWeight(.medium)
+                        .font(.headline)
                         .foregroundStyle(Color(.label))
                     Spacer()
                 }
@@ -131,7 +130,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading) {
                         Text("System prompt", comment: "System prompt label")
                         TextEditor(text: $systemPrompt)
-                            .font(.system(size: 13))
+                            .font(.body)
                             .cornerRadius(4)
                             .multilineTextAlignment(.leading)
                             .frame(minHeight: 100)

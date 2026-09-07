@@ -17,7 +17,7 @@ struct ConversationStatusView: View {
         case .error(let message): HStack {
             Text(message)
                 .foregroundColor(.red)
-                .font(.system(size: 16))
+                .font(.callout)
             Spacer()
         }
         }

@@ -93,11 +93,11 @@ struct ChatMessageView: View {
                     }
                     if let content = message.realContent {
                         Markdown(content)
-    #if os(macOS)
-                            .textSelection(.enabled)
-    #endif
-                            .markdownCodeSyntaxHighlighter(.splash(theme: codeHighlightColorScheme))
-                            .markdownTheme(MarkdownColours.enchantedTheme)
+#if os(macOS)
+                                .textSelection(.enabled)
+#endif
+                                .markdownCodeSyntaxHighlighter(.splash(theme: codeHighlightColorScheme))
+                                .markdownTheme(MarkdownColours.enchantedTheme)
                     }
                     
                     if let uiImage = image {
@@ -185,6 +185,27 @@ struct ChatMessageView: View {
             } else {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     mouseHover = over
+                }
+            }
+        }
+#endif
+#if os(iOS) || os(visionOS)
+        .contextMenu {
+            Button(action: { Clipboard.shared.setString(message.content) }) {
+                Label(NSLocalizedString("Copy", comment: "Copy message button"), systemImage: "doc.on.doc")
+            }
+            
+            Button(action: {
+                Task {
+                    await speechSynthesizer.speak(text: message.content)
+                }
+            }) {
+                Label(NSLocalizedString("Read Aloud", comment: "Read aloud button"), systemImage: "speaker.wave.2.fill")
+            }
+            
+            if message.role == "user" {
+                Button(action: { editMessage = message }) {
+                    Label(NSLocalizedString("Edit", comment: "Edit message button"), systemImage: "pencil")
                 }
             }
         }

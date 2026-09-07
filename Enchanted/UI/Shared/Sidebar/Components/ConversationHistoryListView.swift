@@ -48,7 +48,7 @@ struct ConversationHistoryList: View {
                 
                 HStack {
                     Text(conversationGroup.date.daysAgoString())
-                        .font(.system(size: 14))
+                        .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(Color(.systemGray))
                     
@@ -59,6 +59,13 @@ struct ConversationHistoryList: View {
                         Label("Delete daily conversations", systemImage: "trash")
                     }
                 })
+#if os(iOS) || os(visionOS)
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive, action: { onDeleteDailyConversations(conversationGroup.date) }) {
+                        Label(NSLocalizedString("Delete All", comment: "Delete all conversations for this day"), systemImage: "trash")
+                    }
+                }
+#endif
                 
                 ForEach(conversationGroup.conversations, id:\.self) { dailyConversation in
                     Button(action: {onTap(dailyConversation)}) {
@@ -71,7 +78,7 @@ struct ConversationHistoryList: View {
                             
                             Text(dailyConversation.name)
                                 .lineLimit(1)
-                                .font(.system(size: 16))
+                                .font(.body)
                                 .foregroundColor(Color(.label))
                                 .animation(.easeOut(duration: 0.15))
                                 .transition(.opacity)
@@ -85,6 +92,13 @@ struct ConversationHistoryList: View {
                             Label("Delete", systemImage: "trash")
                         }
                     })
+#if os(iOS) || os(visionOS)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive, action: { onDelete(dailyConversation) }) {
+                            Label(NSLocalizedString("Delete", comment: "Delete conversation"), systemImage: "trash")
+                        }
+                    }
+#endif
                 }
                 
                 Divider()
