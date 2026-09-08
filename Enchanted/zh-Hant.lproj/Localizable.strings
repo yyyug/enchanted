@@ -85,6 +85,8 @@
 "Select Text" = "選擇文字";
 "Shortcuts" = "快捷鍵";
 "Close" = "關閉";
+"Conversations" = "對話記錄";
+"Returns to chat" = "返回對話";
 "Completions" = "完成";
 "New Completion" = "新完成";
 "Create your own dynamic prompts usable anywhere on your mac with keyboard shortcuts to speed up common tasks. You can reorder, delete and edit your completions." = "建立您自己的動態提示，可以在 Mac 上的任何位置使用快捷鍵來加速常見任務。您可以重新排序、刪除和編輯您的完成。";

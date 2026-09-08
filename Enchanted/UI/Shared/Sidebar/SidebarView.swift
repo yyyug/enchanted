@@ -1,10 +1,4 @@
 //
-//  SidebarView.swift
-//  Enchanted
-//
-//  Created by Augustinas Malinauskas on 10/12/2023.
-//
-
 import SwiftUI
 
 struct SidebarView: View {
@@ -14,6 +8,7 @@ struct SidebarView: View {
     var onConversationTap: (_ conversation: ConversationSD) -> ()
     var onConversationDelete: (_ conversation: ConversationSD) -> ()
     var onDeleteDailyConversations: (_ date: Date) -> ()
+    var onClose: (() -> ())?
     @State var showSettings = false
     @State var showCompletions = false
     @State var showKeyboardShortcutas = false
@@ -26,7 +21,34 @@ struct SidebarView: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
+#if os(iOS) || os(visionOS)
+            // Header with title and close button
+            HStack {
+                Text(NSLocalizedString("Conversations", comment: "Conversation history title"))
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(Color(.label))
+                
+                Spacer()
+                
+                Button(action: { onClose?() }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(Color(.label))
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel(NSLocalizedString("Close", comment: "Close sidebar button"))
+                .accessibilityHint(NSLocalizedString("Returns to chat", comment: "Close sidebar hint"))
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+            .background(Color(.systemBackground))
+            
+            Divider()
+#endif
+            
             ScrollView() {
                 ConversationHistoryList(
                     selectedConversation: selectedConversation,
@@ -49,7 +71,7 @@ struct SidebarView: View {
             SidebarButton(title: "Settings", image: "gearshape.fill", onClick: onSettingsTap)
             
         }
-        .padding()
+        .padding(.bottom)
         .background(Color(.systemBackground))
 #if os(macOS)
         .focusedSceneValue(\.showSettings, $showSettings)

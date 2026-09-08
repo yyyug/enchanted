@@ -92,6 +92,15 @@ struct ConversationHistoryList: View {
                             Label("Delete", systemImage: "trash")
                         }
                     })
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel(dailyConversation.name)
+                    .accessibilityAddTraits(selectedConversation == dailyConversation ? .isSelected : [])
+                    .accessibilityCustomActions {
+                        AccessibilityCustomAction(
+                            name: NSLocalizedString("Delete", comment: "Delete conversation"),
+                            action: { onDelete(dailyConversation); return true }
+                        )
+                    }
 #if os(iOS) || os(visionOS)
                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                         Button(role: .destructive, action: { onDelete(dailyConversation) }) {
