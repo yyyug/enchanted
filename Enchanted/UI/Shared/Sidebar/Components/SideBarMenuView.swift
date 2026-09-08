@@ -44,8 +44,10 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
                 }))
                 .accessibilityElement(children: .contain)
                 .accessibilityAddTraits(showSidebar ? .isModal : [])
+                .accessibilityHidden(!showSidebar)
             
             mainContent
+                .accessibilityHidden(showSidebar)
                 .overlay(
                     Group {
                         if showSidebar {
