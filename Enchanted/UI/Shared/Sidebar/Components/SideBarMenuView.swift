@@ -1,10 +1,4 @@
 //
-//  SideBarMenuView.swift
-//  Enchanted
-//
-//  Created by Augustinas Malinauskas on 09/12/2023.
-//
-
 import SwiftUI
 
 struct SideBarStack<SidebarContent: View, Content: View>: View {
@@ -23,8 +17,10 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
     
     var body: some View {
         ZStack(alignment: .leading) {
+            // Sidebar with proper background
             sidebarContent
                 .frame(width: sidebarWidth, alignment: .center)
+                .background(Color(.systemBackground))
                 .offset(x: showSidebar ? offset - sidebarWidth : -sidebarWidth, y: 0)
                 .gesture(DragGesture().onChanged({ gesture in
                     let t = gesture.translation.width
@@ -46,19 +42,23 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
                     }
                     
                 }))
+                .accessibilityElement(children: .contain)
+                .accessibilityAddTraits(showSidebar ? .isModal : [])
+            
             mainContent
                 .overlay(
                     Group {
                         if showSidebar {
-                            Color(.systemGray)
+                            Color.black
                                 .ignoresSafeArea()
-                                .opacity(showSidebar ? (offset/sidebarWidth * 0.3) : 0.1)
+                                .opacity(0.3)
                                 .onTapGesture {
                                     withAnimation(.spring) {
-                                        self.offset = 0
-                                        self.showSidebar = false
+                                        offset = 0
+                                        showSidebar = false
                                     }
                                 }
+                                .accessibilityHidden(true)
                         }
                     }
                 )
@@ -66,10 +66,8 @@ struct SideBarStack<SidebarContent: View, Content: View>: View {
             
         }
         .onChange(of: showSidebar) { oldValue, newValue in
-            if newValue {
-                withAnimation(.spring) {
-                    offset = sidebarWidth
-                }
+            withAnimation(.spring) {
+                offset = newValue ? sidebarWidth : 0
             }
         }
     }

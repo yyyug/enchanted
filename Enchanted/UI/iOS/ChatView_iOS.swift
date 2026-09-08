@@ -94,7 +94,11 @@ struct ChatView: View {
                     .frame(width: 24, height: 24)
                     .foregroundColor(Color(.label))
             }
-            .accessibilityLabel("Menu")
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+            .accessibilityLabel(NSLocalizedString("Menu", comment: "Menu button"))
+            .accessibilityHint(NSLocalizedString("Opens conversation history and settings", comment: "Menu button hint"))
+            .accessibilityAddTraits(.isButton)
 
             Spacer()
 
@@ -116,6 +120,8 @@ struct ChatView: View {
                     .frame(width: 24, height: 24)
                     .foregroundColor(Color(.label))
             }
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
             .accessibilityLabel(NSLocalizedString("New Conversation", comment: "New conversation button"))
             .accessibilitySortPriority(0)
         }

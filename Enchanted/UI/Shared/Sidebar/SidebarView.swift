@@ -50,6 +50,7 @@ struct SidebarView: View {
             
         }
         .padding()
+        .background(Color(.systemBackground))
 #if os(macOS)
         .focusedSceneValue(\.showSettings, $showSettings)
 #endif
