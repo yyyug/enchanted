@@ -245,7 +245,7 @@ struct ChatView: View {
         onMenuTap: {},
         onNewConversationTap: { },
         onSendMessageTap: {_,_,_,_    in},
-        conversationState: .loading,
+        conversationState: .loading(),
         onStopGenerateTap: {},
         reachable: false,
         modelSupportsImages: true, 

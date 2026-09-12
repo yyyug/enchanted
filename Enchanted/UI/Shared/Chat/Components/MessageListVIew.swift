@@ -83,7 +83,7 @@ struct MessageListView: View {
                             
                             ChatMessageView(
                                 message: message,
-                                showLoader: conversationState == .loading && messages.last == message,
+                                showLoader: conversationState.isLoading && messages.last == message,
                                 userInitials: userInitials,
                                 editMessage: $editMessage
                             )
@@ -135,7 +135,7 @@ struct MessageListView: View {
 #Preview {
     MessageListView(
         messages: MessageSD.sample,
-        conversationState: .loading,
+        conversationState: .loading(),
         userInitials: "AM",
         editMessage: .constant(MessageSD.sample[0])
     )

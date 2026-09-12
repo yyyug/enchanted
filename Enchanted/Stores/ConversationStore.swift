@@ -166,7 +166,7 @@ final class ConversationStore: Sendable {
         let assistantMessage = MessageSD(content: "", role: "assistant")
         assistantMessage.conversation = conversation
 
-        conversationState = .loading
+conversationState = .loading()
 
         let service = getService(for: model.modelProvider)
         let chatRequest = ChatRequest(model: model.name, messages: messageHistory, temperature: 0)

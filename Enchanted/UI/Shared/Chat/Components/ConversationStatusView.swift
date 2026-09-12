@@ -38,7 +38,7 @@ struct ConversationStatusView: View {
 
 #Preview {
     Group {
-        ConversationStatusView(state: .loading)
+        ConversationStatusView(state: .loading())
         ConversationStatusView(state: .completed)
         ConversationStatusView(state: .error(message: "Could not connect"))
     }.previewLayout(.sizeThatFits)

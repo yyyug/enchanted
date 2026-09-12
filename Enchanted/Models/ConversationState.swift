@@ -11,4 +11,11 @@ enum ConversationState: Equatable {
     case loading(message: String? = nil)
     case completed
     case error(message: String)
+
+    var isLoading: Bool {
+        if case .loading = self {
+            return true
+        }
+        return false
+    }
 }

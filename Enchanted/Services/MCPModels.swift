@@ -55,7 +55,7 @@ struct MCPServerConfig: Codable, Identifiable, Equatable {
     }
 }
 
-struct MCPTool: Identifiable, Equatable {
+struct MCPTool: Identifiable {
     let serverId: UUID
     let serverName: String
     let name: String
