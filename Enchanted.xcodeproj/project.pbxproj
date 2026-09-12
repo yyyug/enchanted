@@ -105,6 +105,9 @@
 		FFFD00C92B94CB5E00392AE6 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = FFFD00C82B94CB5E00392AE6 /* AsyncAlgorithms */; };
 		B72E20388BB1459D8FFA5701 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72E20388BB1459D8FFA5702 /* LLMService.swift */; };
 		87365B6CE5C9467296725F31 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87365B6CE5C9467296725F32 /* OpenAIService.swift */; };
+		EE00000000000000000000D2 /* MCPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000D1 /* MCPModels.swift */; };
+		EE00000000000000000000D4 /* MCPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000D3 /* MCPClient.swift */; };
+		EE00000000000000000000D6 /* MCPServerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000D5 /* MCPServerSettingsView.swift */; };
 		EE00000000000000000000C1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000A1 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -206,6 +209,9 @@
 		FFFD00C12B92607800392AE6 /* CompletionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionsStore.swift; sourceTree = "<group>"; };
 		B72E20388BB1459D8FFA5702 /* LLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLMService.swift; sourceTree = "<group>"; };
 		87365B6CE5C9467296725F32 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
+		EE00000000000000000000D1 /* MCPModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPModels.swift; sourceTree = "<group>"; };
+		EE00000000000000000000D3 /* MCPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPClient.swift; sourceTree = "<group>"; };
+		EE00000000000000000000D5 /* MCPServerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -301,6 +307,7 @@
 			isa = PBXGroup;
 			children = (
 				FF10026C2B2751760011A4DC /* SettingsView.swift */,
+				EE00000000000000000000D5 /* MCPServerSettingsView.swift */,
 				FF0146CA2B3DA1DF00A2A9F6 /* Settings.swift */,
 			);
 			path = Settings;
@@ -536,6 +543,8 @@
 				B72E20388BB1459D8FFA5702 /* LLMService.swift */,
 				FF10023D2B24F4900011A4DC /* OllamaService.swift */,
 				87365B6CE5C9467296725F32 /* OpenAIService.swift */,
+				EE00000000000000000000D1 /* MCPModels.swift */,
+				EE00000000000000000000D3 /* MCPClient.swift */,
 				FF10024F2B25C79F0011A4DC /* SwiftDataService.swift */,
 				FF6B7B122B3EE7AC00E8FEA3 /* Throttler.swift */,
 				FFCF00F02C03209A00590E79 /* SpeechService.swift */,
@@ -760,6 +769,9 @@
 				FFFD00C22B92607800392AE6 /* CompletionsStore.swift in Sources */,
 				B72E20388BB1459D8FFA5701 /* LLMService.swift in Sources */,
 				87365B6CE5C9467296725F31 /* OpenAIService.swift in Sources */,
+				EE00000000000000000000D2 /* MCPModels.swift in Sources */,
+				EE00000000000000000000D4 /* MCPClient.swift in Sources */,
+				EE00000000000000000000D6 /* MCPServerSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

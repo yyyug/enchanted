@@ -32,6 +32,7 @@ struct SettingsView: View {
     var voices: [AVSpeechSynthesisVoice]
 
     @State private var deleteConversationsDialog = false
+    @State private var showMCPServers = false
     
     var body: some View {
         VStack {
@@ -238,6 +239,19 @@ struct SettingsView: View {
                     .keyboardType(.URL)
                     .autocapitalization(.none)
 #endif
+
+                Section(header: Text("MCP Servers", comment: "MCP servers section").font(.headline)) {
+                    Button {
+                        showMCPServers = true
+                    } label: {
+                        Label("MCP Servers", systemImage: "externaldrive.connected.to.line.below")
+                            .foregroundStyle(Color.label)
+                    }
+                }
+                .sheet(isPresented: $showMCPServers) {
+                    MCPServerSettingsView()
+                        .frame(maxWidth: 700)
+                }
 
                 Button(action: {deleteConversationsDialog.toggle()}) {
                     HStack {

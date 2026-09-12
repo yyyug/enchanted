@@ -31,6 +31,8 @@ final class ConversationStore: Sendable {
     @MainActor var selectedConversation: ConversationSD?
     @MainActor var messages: [MessageSD] = []
 
+    private var agenticTask: Task<Void, Never>?
+
     init(swiftDataService: SwiftDataService) {
         self.swiftDataService = swiftDataService
     }
@@ -108,6 +110,8 @@ final class ConversationStore: Sendable {
     
     @MainActor func stopGenerate() {
         generation?.cancel()
+        agenticTask?.cancel()
+        agenticTask = nil
         handleComplete()
         withAnimation {
             conversationState = .completed
@@ -175,19 +179,37 @@ final class ConversationStore: Sendable {
             try? await loadConversations()
 
             if await service.reachable() {
-                DispatchQueue.global(qos: .background).async {
-                    self.generation = service.chat(request: chatRequest)
-                        .sink(receiveCompletion: { [weak self] completion in
-                            switch completion {
-                            case .finished:
-                                self?.handleComplete()
-                            case .failure(let error):
-                                self?.handleError(error.localizedDescription)
-                            }
-                        }, receiveValue: { [weak self] response in
-                            self?.handleReceive(response)
-                        })
+                let mcpStore = MCPServerStore.shared
+                if mcpStore.hasEnabledServers {
+                    await mcpStore.connectAll()
+                }
+                let tools = mcpStore.availableTools
 
+                if !tools.isEmpty, let agenticService = service as? any ChatCompletionProviding {
+                    agenticTask = Task { @MainActor in
+                        await runAgenticLoop(
+                            service: agenticService,
+                            initialMessages: messageHistory,
+                            model: model.name,
+                            temperature: 0,
+                            tools: tools
+                        )
+                    }
+                } else {
+                    DispatchQueue.global(qos: .background).async {
+                        self.generation = service.chat(request: chatRequest)
+                            .sink(receiveCompletion: { [weak self] completion in
+                                switch completion {
+                                case .finished:
+                                    self?.handleComplete()
+                                case .failure(let error):
+                                    self?.handleError(error.localizedDescription)
+                                }
+                            }, receiveValue: { [weak self] response in
+                                self?.handleReceive(response)
+                            })
+
+                    }
                 }
             } else {
                 self.handleError("Server unreachable")
@@ -239,5 +261,100 @@ final class ConversationStore: Sendable {
         withAnimation {
             conversationState = .completed
         }
+    }
+
+    // MARK: - MCP Agentic Loop
+
+    @MainActor
+    private func runAgenticLoop(
+        service: any ChatCompletionProviding,
+        initialMessages: [ChatMessage],
+        model: String,
+        temperature: Double?,
+        tools: [[String: Any]]
+    ) async {
+        var workingMessages = initialMessages
+        var finalContent = ""
+        let maxIterations = 12
+        var iteration = 0
+
+        while iteration < maxIterations {
+            if Task.isCancelled {
+                handleComplete()
+                return
+            }
+
+            iteration += 1
+            let completion: ChatCompletionMessage
+            do {
+                completion = try await service.chatCompletion(
+                    messages: workingMessages,
+                    model: model,
+                    temperature: temperature,
+                    tools: tools
+                )
+            } catch {
+                if Task.isCancelled {
+                    handleComplete()
+                } else {
+                    handleError(error.localizedDescription)
+                }
+                return
+            }
+
+            workingMessages.append(ChatMessage(
+                role: .assistant,
+                content: completion.content ?? "",
+                images: nil,
+                toolCallId: nil,
+                toolCalls: completion.toolCalls.isEmpty ? nil : completion.toolCalls
+            ))
+
+            if completion.toolCalls.isEmpty {
+                finalContent = completion.content ?? ""
+                break
+            }
+
+            for toolCall in completion.toolCalls {
+                if Task.isCancelled {
+                    handleComplete()
+                    return
+                }
+                withAnimation {
+                    conversationState = .loading(message: "Running tool: \(toolCall.function.name)")
+                }
+                let result = await MCPServerStore.shared.executeTool(
+                    name: toolCall.function.name,
+                    argumentsJSON: toolCall.function.arguments
+                )
+                workingMessages.append(ChatMessage(
+                    role: .tool,
+                    content: result.content,
+                    images: nil,
+                    toolCallId: toolCall.id,
+                    toolCalls: nil
+                ))
+            }
+        }
+
+        if iteration >= maxIterations && finalContent.isEmpty {
+            finalContent = "Reached the maximum number of tool calls (\(maxIterations))."
+        }
+
+        guard let lastMessage = messages.last else { return }
+        lastMessage.content = finalContent
+        lastMessage.error = false
+        lastMessage.done = true
+
+        if !Task.isCancelled {
+            Task(priority: .background) {
+                try? await self.swiftDataService.updateMessage(lastMessage)
+            }
+        }
+
+        withAnimation {
+            conversationState = .completed
+        }
+        agenticTask = nil
     }
 }

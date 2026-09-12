@@ -12,7 +12,18 @@ struct ConversationStatusView: View {
     var state: ConversationState
     var body: some View {
         switch state {
-        case .loading: EmptyView()
+        case .loading(let message):
+            if let message = message {
+                HStack(spacing: 6) {
+                    ProgressView()
+                    Text(message)
+                        .font(.callout)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+            } else {
+                EmptyView()
+            }
         case .completed: EmptyView()
         case .error(let message): HStack {
             Text(message)

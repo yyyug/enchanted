@@ -8,7 +8,7 @@
 import Foundation
 
 enum ConversationState: Equatable {
-    case loading
+    case loading(message: String? = nil)
     case completed
     case error(message: String)
 }

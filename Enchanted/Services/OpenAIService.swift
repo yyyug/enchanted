@@ -43,6 +43,23 @@ struct OpenAIStreamResponse: Codable {
     let choices: [OpenAIStreamChoice]?
 }
 
+struct OpenAICompletionResponse: Codable {
+    let choices: [OpenAICompletionChoice]?
+    let error: OpenAIErrorDetail?
+}
+
+struct OpenAICompletionChoice: Codable {
+    let message: OpenAICompletionMessage?
+    let finish_reason: String?
+    let index: Int?
+}
+
+struct OpenAICompletionMessage: Codable {
+    let role: String?
+    let content: String?
+    let tool_calls: [ChatToolCall]?
+}
+
 struct OpenAIErrorResponse: Codable {
     let error: OpenAIErrorDetail?
 }
@@ -53,7 +70,7 @@ struct OpenAIErrorDetail: Codable {
     let code: String?
 }
 
-class OpenAIService: LLMService, @unchecked Sendable {
+class OpenAIService: LLMService, ChatCompletionProviding, @unchecked Sendable {
     static let shared = OpenAIService()
 
     private var baseURL: URL
@@ -136,6 +153,97 @@ class OpenAIService: LLMService, @unchecked Sendable {
         } catch {
             return false
         }
+    }
+
+    func chatCompletion(messages: [ChatMessage], model: String, temperature: Double?, tools: [[String: Any]]?) async throws -> ChatCompletionMessage {
+        let url = baseURL.appendingPathComponent("chat/completions")
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.timeoutInterval = 120
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        var body: [String: Any] = [
+            "model": model,
+            "messages": Self.buildMessagesJSON(messages),
+            "stream": false
+        ]
+        if let temperature { body["temperature"] = temperature }
+        if let tools, !tools.isEmpty { body["tools"] = tools }
+
+        urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        let (data, response) = try await urlSession.data(for: urlRequest)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw URLError(.badServerResponse)
+        }
+
+        if httpResponse.statusCode != 200 {
+            if let errorResponse = try? JSONDecoder().decode(OpenAIErrorResponse.self, from: data),
+               let message = errorResponse.error?.message {
+                throw NSError(domain: "OpenAIService", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: message])
+            }
+            throw NSError(domain: "OpenAIService", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Failed to fetch chat completion"])
+        }
+
+        guard let decoded = try? JSONDecoder().decode(OpenAICompletionResponse.self, from: data),
+              let choice = decoded.choices?.first else {
+            throw NSError(domain: "OpenAIService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid chat completion response"])
+        }
+
+        let message = choice.message
+        return ChatCompletionMessage(
+            content: message?.content,
+            toolCalls: message?.tool_calls ?? []
+        )
+    }
+
+    // MARK: - Helpers
+
+    private static func buildMessagesJSON(_ messages: [ChatMessage]) -> [[String: Any]] {
+        var result: [[String: Any]] = []
+        for message in messages {
+            var msgDict: [String: Any] = [
+                "role": message.role.rawValue,
+                "content": message.content
+            ]
+
+            if let images = message.images, !images.isEmpty {
+                var contentParts: [[String: Any]] = [
+                    ["type": "text", "text": message.content]
+                ]
+                for imageBase64 in images {
+                    contentParts.append([
+                        "type": "image_url",
+                        "image_url": ["url": "data:image/jpeg;base64,\(imageBase64)"]
+                    ])
+                }
+                msgDict["content"] = contentParts
+            }
+
+            if let toolCallId = message.toolCallId {
+                msgDict["tool_call_id"] = toolCallId
+            }
+
+            if let toolCalls = message.toolCalls, !toolCalls.isEmpty {
+                var toolCallsArray: [[String: Any]] = []
+                for toolCall in toolCalls {
+                    toolCallsArray.append([
+                        "id": toolCall.id,
+                        "type": "function",
+                        "function": [
+                            "name": toolCall.function.name,
+                            "arguments": toolCall.function.arguments
+                        ]
+                    ])
+                }
+                msgDict["tool_calls"] = toolCallsArray
+            }
+
+            result.append(msgDict)
+        }
+        return result
     }
 
     func chat(request: ChatRequest) -> AnyPublisher<any ChatResponse, Error> {
