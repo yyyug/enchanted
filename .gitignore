@@ -1,0 +1,7 @@
+# Build artifacts
+*.ipa
+*.xcarchive
+build/
+build-output/
+DerivedData/
+.DS_Store

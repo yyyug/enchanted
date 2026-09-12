@@ -80,71 +80,50 @@ final class SpeechRecognizer: ObservableObject {
      Initializes a new speech recognizer. If this is the first time you've used the class, it
      requests access to the speech recognizer and the microphone.
      */
-    /// Get the appropriate locale for speech recognition based on device locale
-    private func getSpeechRecognitionLocale(from locale: Locale) -> Locale {
-        let identifier = locale.identifier
+    /// Resolve a locale identifier to a locale that `SFSpeechRecognizer` actually supports.
+    ///
+    /// `SFSpeechRecognizer` only supports a fixed set of locales (e.g. "zh-TW",
+    /// "zh-HK", "zh-CN", "en-US"). Script-only tags like "zh-Hant"/"zh-Hans"
+    /// (used by the device language and the settings picker) are NOT in that
+    /// set, so they must be mapped to a supported locale. Otherwise
+    /// `SFSpeechRecognizer(locale:)` returns nil and recognition silently
+    /// falls back to English.
+    private static func supportedLocale(for identifier: String) -> Locale {
+        let supported = SFSpeechRecognizer.supportedLocales()
 
-        // Check for Chinese locales
-        if identifier.hasPrefix("zh") {
-            // Chinese Traditional (Hong Kong, Taiwan, Macau)
-            if identifier.contains("Hant") || identifier.contains("HK") || identifier.contains("TW") || identifier.contains("MO") {
-                // Try zh-HK first for Hong Kong, then fall back to zh-Hant
-                if identifier.contains("HK") {
-                    let hkLocale = Locale(identifier: "zh-HK")
-                    if SFSpeechRecognizer.supportedLocales().contains(hkLocale) {
-                        return hkLocale
-                    }
-                }
-                return Locale(identifier: "zh-Hant")
-            }
-            // Chinese Simplified (China, Singapore, Malaysia)
-            if identifier.contains("Hans") || identifier.contains("CN") || identifier.contains("SG") {
-                return Locale(identifier: "zh-Hans")
-            }
-            // Default to Traditional Chinese for any other zh variant
-            return Locale(identifier: "zh-Hant")
+        let requested = Locale(identifier: identifier)
+        if supported.contains(requested) {
+            return requested
         }
 
-        // For other locales, use as-is
-        return locale
+        let candidates: [String]
+        if identifier.hasPrefix("zh") {
+            if identifier.contains("CN") || identifier.contains("Hans") {
+                candidates = ["zh-CN", "zh-Hans", "zh-Hant-TW", "zh-TW", "zh-HK"]
+            } else if identifier.contains("HK") {
+                candidates = ["zh-HK", "yue-CN", "zh-CN", "zh-Hant-TW", "zh-TW"]
+            } else {
+                // Traditional Chinese default (TW, MO, Hant, or bare zh)
+                candidates = ["zh-Hant-TW", "zh-TW", "zh-HK", "zh-CN"]
+            }
+        } else {
+            candidates = [identifier, "en-US"]
+        }
+
+        for candidate in candidates {
+            let locale = Locale(identifier: candidate)
+            if supported.contains(locale) {
+                return locale
+            }
+        }
+        return Locale(identifier: "en-US")
     }
 
     func userInit() async {
-        // Check for user-specified speech recognition language override
-        let savedLanguage = UserDefaults.standard.string(forKey: "speechRecognitionLanguage") ?? "auto"
-        if !savedLanguage.isEmpty && savedLanguage != "auto" {
-            recognizer = SFSpeechRecognizer(locale: Locale(identifier: savedLanguage))
-            print("Using user-specified speech language: \(savedLanguage)")
-        }
-
-        if recognizer != nil {
-            // Verify the recognizer is available
-            if recognizer!.isAvailable {
-                return
-            }
-            // If not available, fall through to default
-            recognizer = nil
-        }
-
-        // Get appropriate locale for speech recognition
-        let currentLocale = Locale.current
-        let speechLocale = getSpeechRecognitionLocale(from: currentLocale)
-        recognizer = SFSpeechRecognizer(locale: speechLocale)
-
-        if recognizer == nil || !recognizer!.isAvailable {
-            print("Speech recognizer not available for locale: \(speechLocale.identifier), falling back to English")
-            recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
-        }
-
-        guard let rec = recognizer, rec.isAvailable else {
-            print("Speech recognizer not available for any locale")
-            transcript = "<< Speech recognizer not available >>"
-            return
-        }
-
-        print("Using locale: \(rec.locale.identifier)")
-
-        // Request authorization - this shows the permission dialog
+        // Request authorization first, on every init. This shows the permission
+        // dialog on first use and is required before transcribing, even when a
+        // valid recognizer is found below. Previously this was skipped when the
+        // recognizer was available, so the prompt never appeared on first use.
         let authStatus = SFSpeechRecognizer.authorizationStatus()
         print("Current speech auth status: \(authStatus.rawValue)")
 
@@ -172,6 +151,38 @@ final class SpeechRecognizer: ObservableObject {
         }
         #endif
 
+        // Check for user-specified speech recognition language override
+        let savedLanguage = UserDefaults.standard.string(forKey: "speechRecognitionLanguage") ?? "auto"
+        if !savedLanguage.isEmpty && savedLanguage != "auto" {
+            let savedLocale = Self.supportedLocale(for: savedLanguage)
+            recognizer = SFSpeechRecognizer(locale: savedLocale)
+            print("Using user-specified speech language: \(savedLanguage) -> \(savedLocale.identifier)")
+            if let rec = recognizer, rec.isAvailable {
+                print("Using locale: \(rec.locale.identifier)")
+                print("Speech recognizer initialized successfully")
+                return
+            }
+            // If not available, fall through to default
+            recognizer = nil
+        }
+
+        // Get appropriate locale for speech recognition based on device locale
+        let currentLocale = Locale.current
+        let speechLocale = Self.supportedLocale(for: currentLocale.identifier)
+        recognizer = SFSpeechRecognizer(locale: speechLocale)
+
+        if recognizer == nil || !recognizer!.isAvailable {
+            print("Speech recognizer not available for locale: \(speechLocale.identifier), falling back to English")
+            recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+        }
+
+        guard let rec = recognizer, rec.isAvailable else {
+            print("Speech recognizer not available for any locale")
+            transcript = "<< Speech recognizer not available >>"
+            return
+        }
+
+        print("Using locale: \(rec.locale.identifier)")
         print("Speech recognizer initialized successfully")
     }
     

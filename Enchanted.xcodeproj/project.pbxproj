@@ -105,6 +105,7 @@
 		FFFD00C92B94CB5E00392AE6 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = FFFD00C82B94CB5E00392AE6 /* AsyncAlgorithms */; };
 		B72E20388BB1459D8FFA5701 /* LLMService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72E20388BB1459D8FFA5702 /* LLMService.swift */; };
 		87365B6CE5C9467296725F31 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87365B6CE5C9467296725F32 /* OpenAIService.swift */; };
+		EE00000000000000000000C1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000A1 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -187,6 +188,10 @@
 		FFD57E312BF291B2003FEFF1 /* CodeBlockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeBlockView.swift; sourceTree = "<group>"; };
 		FFE21C772B82353A00A69B9C /* SleepTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepTest.swift; sourceTree = "<group>"; };
 		FFE2C8222B9A657A00BD82F3 /* Accessibility.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Accessibility.plist; sourceTree = "<group>"; };
+		EE00000000000000000000B1 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		EE00000000000000000000B2 /* zh-HK */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-HK"; path = "zh-HK.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		EE00000000000000000000B3 /* zh-TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-TW"; path = "zh-TW.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		EE00000000000000000000B4 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		FFEB9CA72BA04304004B1F3D /* NotificationMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationMessage.swift; sourceTree = "<group>"; };
 		FFEC328D2B24779A003E5C04 /* Enchanted.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Enchanted.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FFEC32902B24779A003E5C04 /* EnchantedApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnchantedApp.swift; sourceTree = "<group>"; };
@@ -461,6 +466,7 @@
 				FFEC32982B24779B003E5C04 /* Enchanted.entitlements */,
 				FFE2C8222B9A657A00BD82F3 /* Accessibility.plist */,
 				FFBBF4822B348345008D611C /* Info.plist */,
+				EE00000000000000000000A1 /* Localizable.strings */,
 				FFEC32962B24779B003E5C04 /* Assets.xcassets */,
 				FFEC32A12B24783B003E5C04 /* Application */,
 				FFEC32A22B247858003E5C04 /* Extensions */,
@@ -625,6 +631,8 @@
 				Base,
 				zh-Hant,
 				zh-HK,
+				zh-TW,
+				zh-Hans,
 			);
 			mainGroup = FFEC32842B24779A003E5C04;
 			packageReferences = (
@@ -655,6 +663,7 @@
 				FFEC329B2B24779B003E5C04 /* Preview Assets.xcassets in Resources */,
 				FFE2C8232B9A657A00BD82F3 /* Accessibility.plist in Resources */,
 				FFEC32972B24779B003E5C04 /* Assets.xcassets in Resources */,
+				EE00000000000000000000C1 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -755,6 +764,20 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		EE00000000000000000000A1 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				EE00000000000000000000B1 /* zh-Hant */,
+				EE00000000000000000000B2 /* zh-HK */,
+				EE00000000000000000000B3 /* zh-TW */,
+				EE00000000000000000000B4 /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		FFEC329C2B24779B003E5C04 /* Debug */ = {

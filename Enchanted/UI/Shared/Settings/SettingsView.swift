@@ -215,8 +215,8 @@ struct SettingsView: View {
                 // Speech Recognition Language Picker
                 Picker(selection: $speechRecognitionLanguage) {
                     Text("Auto (Device Language)", comment: "Auto language option").tag("auto")
-                    Text("中文繁體 (繁體中文)", comment: "Chinese Traditional").tag("zh-Hant")
-                    Text("中文簡體 (簡體中文)", comment: "Chinese Simplified").tag("zh-Hans")
+                    Text("中文繁體 (繁體中文)", comment: "Chinese Traditional").tag("zh-TW")
+                    Text("中文簡體 (簡體中文)", comment: "Chinese Simplified").tag("zh-CN")
                     Text("中文 (香港)", comment: "Chinese Hong Kong").tag("zh-HK")
                     Text("English (US)", comment: "English US").tag("en-US")
                     Text("English (UK)", comment: "English UK").tag("en-GB")
