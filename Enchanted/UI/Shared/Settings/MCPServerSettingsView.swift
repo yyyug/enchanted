@@ -118,7 +118,6 @@ struct MCPServerSettingsView: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 6) {
-                VStack(alignment: .trailing, spacing: 6) {
                 Text(String.localizedStringWithFormat(
                     NSLocalizedString("%lld tools", comment: "Tool count"),
                     store.toolCount(for: server)
