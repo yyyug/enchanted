@@ -242,6 +242,7 @@ conversationState = .loading()
         guard let lastMesasge = messages.last else { return }
         lastMesasge.error = true
         lastMesasge.done = false
+        lastMesasge.errorMessage = errorMessage
         
         Task(priority: .background) {
             try? await swiftDataService.updateMessage(lastMesasge)
@@ -257,6 +258,7 @@ conversationState = .loading()
         guard let lastMesasge = messages.last else { return }
         lastMesasge.error = false
         lastMesasge.done = true
+        lastMesasge.errorMessage = nil
         
         Task(priority: .background) {
             try await self.swiftDataService.updateMessage(lastMesasge)

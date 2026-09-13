@@ -80,9 +80,11 @@
 "Read Aloud" = "朗讀";
 "Stop Reading" = "停止朗讀";
 "Edit" = "編輯";
-"Thought for a few seconds." = "思考了幾秒鐘。";
-"Thinking..." = "思考中...";
 "Select Text" = "選擇文字";
+"Loading response" = "載入回應中";
+"Search models" = "搜尋模型";
+"No models found" = "找不到模型";
+"Failed to get a response. Please check your server settings and try again." = "無法取得回應。請檢查您的伺服器設定後再試。";
 "Shortcuts" = "快捷鍵";
 "Close" = "關閉";
 "Conversations" = "對話記錄";
@@ -105,8 +107,6 @@
 "Copy Chat" = "複製對話";
 "Copy Chat as JSON" = "複製對話為 JSON";
 "Events" = "事件";
-"Thought for a few seconds." = "思考了幾秒鐘。";
-"Thinking..." = "思考中...";
 "Instruction Prompt gets appended before the selected text and together sent to the LLM." = "指令提示會附加在選取文字之前，一起發送到 LLM。";
 "Only single character keyboard shortcuts allowed." = "僅允許單字元鍵盤快捷鍵。";
 "Ollama is unreachable. Go to Settings and update your Ollama API endpoint." = "Ollama 無法連線。請前往設定並更新您的 Ollama API 端點。";

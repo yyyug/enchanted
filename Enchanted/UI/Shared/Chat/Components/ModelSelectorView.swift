@@ -79,35 +79,55 @@ struct ModelSelectionSheet: View {
     var selectedModel: LanguageModelSD?
     var onSelectModel: @MainActor (_ model: LanguageModelSD?) -> ()
     @Environment(\.dismiss) var dismiss
-    
+    @State private var searchText = ""
+
+    private var filteredModels: [LanguageModelSD] {
+        if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+            return modelsList
+        }
+        return modelsList.filter { model in
+            model.name.localizedCaseInsensitiveContains(searchText) ||
+            model.prettyName.localizedCaseInsensitiveContains(searchText) ||
+            model.prettyVersion.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             List {
-                ForEach(modelsList, id: \.self) { model in
-                    Button(action: {
-                        onSelectModel(model)
-                        dismiss()
-                    }) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(model.prettyName)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Text(model.prettyVersion)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                if filteredModels.isEmpty {
+                    Text(NSLocalizedString("No models found", comment: "Empty model search result"))
+                        .foregroundColor(.secondary)
+                } else {
+                    ForEach(filteredModels, id: \.self) { model in
+                        Button(action: {
+                            onSelectModel(model)
+                            dismiss()
+                        }) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(model.prettyName)
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Text(model.prettyVersion)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                if selectedModel?.id == model.id {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.accentColor)
+                                }
                             }
-                            Spacer()
-                            if selectedModel?.id == model.id {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.accentColor)
-                            }
+                            .contentShape(Rectangle())
                         }
-                        .contentShape(Rectangle())
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(model.prettyName), \(model.prettyVersion)")
+                        .accessibilityAddTraits(selectedModel?.id == model.id ? [.isButton, .isSelected] : .isButton)
                     }
-                    .buttonStyle(.plain)
                 }
             }
+            .searchable(text: $searchText, prompt: NSLocalizedString("Search models", comment: "Model search prompt"))
             .navigationTitle(NSLocalizedString("Select Model", comment: "Model selection sheet title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

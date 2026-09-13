@@ -54,17 +54,19 @@ final class MessageSD: Identifiable {
     var role: String
     var done: Bool = false
     var error: Bool = false
+    var errorMessage: String?
     var createdAt: Date = Date.now
     @Attribute(.externalStorage) var image: Data?
     
     @Relationship var conversation: ConversationSD?
         
     
-    init(content: String, role: String, done: Bool = false, error: Bool = false, image: Data? = nil) {
+    init(content: String, role: String, done: Bool = false, error: Bool = false, errorMessage: String? = nil, image: Data? = nil) {
         self.content = content
         self.role = role
         self.done = done
         self.error = error
+        self.errorMessage = errorMessage
         self.conversation = conversation
         self.image = image
     }

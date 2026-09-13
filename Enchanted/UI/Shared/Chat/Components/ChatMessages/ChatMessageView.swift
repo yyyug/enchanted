@@ -50,11 +50,13 @@ struct ChatMessageView: View {
                             ActivityIndicatorView(isVisible: .constant(true), type: .rotatingDots(count: 5))
                                 .frame(width: 24, height: 24)
                                 .rotationEffect(.degrees(90))
+                                .accessibilityLabel(NSLocalizedString("Loading response", comment: "Loading indicator"))
                         } else {
                             Image("logo-nobg")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 24, height: 24)
+                                .accessibilityHidden(true)
                         }
                     }
                 }
@@ -107,6 +109,21 @@ struct ChatMessageView: View {
                             .frame(width: 100)
                             .clipShape(RoundedRectangle(cornerRadius: 5))
                         
+                    }
+
+                    if message.error {
+                        HStack(spacing: 6) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(Color(.systemRed))
+                            Text(message.errorMessage ?? NSLocalizedString("Failed to get a response. Please check your server settings and try again.", comment: "Generic LLM error"))
+                                .font(.callout)
+                                .foregroundStyle(Color(.systemRed))
+                                .textSelection(.enabled)
+                        }
+                        .padding(10)
+                        .background(Color(.systemRed).opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                        .padding(.top, 4)
+                        .accessibilityElement(children: .combine)
                     }
                 }
                 .if(message.role == "user", transform: { v in
