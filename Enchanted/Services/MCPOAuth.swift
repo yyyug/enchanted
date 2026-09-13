@@ -139,7 +139,7 @@ enum MCPOAuthSessionStore {
 /// PKCE authorization code grant (via `ASWebAuthenticationSession`) and
 /// refresh token renewal. Serialized on the main actor.
 @MainActor
-final class MCPOAuthClient {
+final class MCPOAuthClient: NSObject {
     static let shared = MCPOAuthClient()
 
     static let redirectURI = "enchanted://oauth/callback"
@@ -149,7 +149,7 @@ final class MCPOAuthClient {
     private var activeState: String?
     private var activeCodeVerifier: String?
 
-    private init() {}
+    private override init() {}
 
     /// Returns a usable access token for the given server, performing the full
     /// authorization flow when necessary.
@@ -315,9 +315,10 @@ final class MCPOAuthClient {
         ])
 
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, http.statusCode == 201 || http.statusCode == 200 else {
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+        guard statusCode == 201 || statusCode == 200 else {
             let message = String(data: data, encoding: .utf8) ?? ""
-            throw MCPConnectionError.oauth("Client registration failed: \(message.isEmpty ? "HTTP \(http.statusCode)" : message)")
+            throw MCPConnectionError.oauth("Client registration failed: \(message.isEmpty ? "HTTP \(statusCode)" : message)")
         }
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
               let clientID = json["client_id"] as? String else {
@@ -470,9 +471,10 @@ final class MCPOAuthClient {
         request.httpBody = components.query?.data(using: .utf8)
 
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+        guard statusCode == 200 else {
             let message = String(data: data, encoding: .utf8) ?? ""
-            throw MCPConnectionError.oauth("Token request failed: \(message.isEmpty ? "HTTP \(http.statusCode)" : message)")
+            throw MCPConnectionError.oauth("Token request failed: \(message.isEmpty ? "HTTP \(statusCode)" : message)")
         }
         return data
     }

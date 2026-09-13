@@ -425,9 +425,10 @@ final class MCPServerStore: ObservableObject {
         client.on401Unauthorized = { [weak self, server] in
             guard let self else { return }
             try await self.ensureAuthorized(for: server)
-            let token = MCPTokenStore.load(serverId: server.id)
-            if let token {
-                self.clients[server.id]?.updateAuthToken("Bearer \(token.accessToken)")
+            await MainActor.run {
+                if let token = MCPTokenStore.load(serverId: server.id) {
+                    self.clients[server.id]?.updateAuthToken("Bearer \(token.accessToken)")
+                }
             }
         }
 
@@ -442,7 +443,8 @@ final class MCPServerStore: ObservableObject {
     private func startServerStream(server: MCPServerConfig, client: MCPClient) {
         streamTasks[server.id]?.cancel()
         let task = Task { [weak client] in
-            await client?.startServerStream()
+            guard let client else { return }
+            await client.startServerStream()
         }
         streamTasks[server.id] = task
     }
