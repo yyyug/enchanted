@@ -12,17 +12,24 @@ struct ConversationStatusView: View {
     @ObservedObject private var mcpStore = MCPServerStore.shared
 
     var state: ConversationState
+    var onCancel: (() -> Void)? = nil
     var body: some View {
         switch state {
         case .loading(let message):
             VStack(alignment: .leading, spacing: 4) {
                 if let message = message {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 8) {
                         ProgressView()
                         Text(message)
                             .font(.callout)
                             .foregroundColor(.secondary)
                         Spacer()
+                        if let onCancel {
+                            Button(NSLocalizedString("Cancel", comment: "Cancel button"), role: .destructive) { onCancel() }
+                                .buttonStyle(.borderless)
+                                .font(.footnote)
+                                .accessibilityLabel(NSLocalizedString("Cancel", comment: "Cancel button"))
+                        }
                     }
                 }
                 if let progress = mcpStore.progress {

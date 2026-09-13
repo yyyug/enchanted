@@ -112,6 +112,9 @@ final class ConversationStore: Sendable {
         generation?.cancel()
         agenticTask?.cancel()
         agenticTask = nil
+        Task {
+            await MCPServerStore.shared.cancelToolExecution()
+        }
         handleComplete()
         withAnimation {
             conversationState = .completed

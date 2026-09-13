@@ -214,7 +214,7 @@ struct ChatView: View {
                 })
             }
             
-            ConversationStatusView(state: conversationState)
+            ConversationStatusView(state: conversationState, onCancel: { onStopGenerateTap() })
                 .padding()
             
             if !reachable {

@@ -701,6 +701,15 @@ final class MCPServerStore: ObservableObject {
         }
     }
 
+    /// Cancels in-flight requests on every connected server and clears progress.
+    func cancelToolExecution() async {
+        progress = nil
+        resetPendingRequests()
+        for client in clients.values {
+            await client.cancelActiveRequests()
+        }
+    }
+
     private static func canonicalArgumentsJSON(_ arguments: [String: Any]) -> String {
         guard let data = try? JSONSerialization.data(withJSONObject: arguments, options: [.sortedKeys]) else {
             return ""

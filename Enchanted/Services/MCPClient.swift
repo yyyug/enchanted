@@ -591,11 +591,11 @@ final class MCPClient: @unchecked Sendable {
     }
 
     /// POSTs `notifications/cancelled` for every currently in-flight request.
-    private func cancelActiveRequests() async {
+    func cancelActiveRequests(reason: String = "Request cancelled by user") async {
         for id in activeRequestIdsSnapshot() {
             await sendNotification(method: "notifications/cancelled", params: [
                 "requestId": id,
-                "reason": "Request timed out"
+                "reason": reason
             ])
         }
     }
@@ -650,7 +650,12 @@ final class MCPClient: @unchecked Sendable {
                 return first
             }
         } catch let error as MCPConnectionError where error.isTimeout {
-            await cancelActiveRequests()
+            await cancelActiveRequests(reason: "Request timed out")
+            throw error
+        } catch {
+            if Task.isCancelled {
+                await cancelActiveRequests()
+            }
             throw error
         }
     }
