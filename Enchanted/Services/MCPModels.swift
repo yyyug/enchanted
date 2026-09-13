@@ -7,8 +7,9 @@
 
 import Foundation
 import Combine
+import CryptoKit
 
-struct MCPServerConfig: Codable, Identifiable, Equatable {
+struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
     var id: UUID
     var name: String
     var url: String
@@ -76,17 +77,194 @@ struct MCPTool: Identifiable {
     }
 }
 
-struct MCPToolResult {
+struct MCPToolResult: Sendable {
     var content: String
 }
 
-struct MCPProgress {
+struct MCPProgress: Sendable, Equatable {
     let message: String?
     let fraction: Double?
 }
 
-/// Owns the list of configured MCP servers, their persistent config, live connections
-/// and the merged tool catalog exposed to the agentic loop.
+// MARK: - Sampling
+
+enum MCPSamplingPolicy: Int, Codable, CaseIterable, Identifiable {
+    case askAlways = 0
+    case allowAlways = 1
+    case deny = 2
+
+    var id: Int { rawValue }
+
+    var title: String {
+        switch self {
+        case .askAlways: return "Always ask"
+        case .allowAlways: return "Auto-approve"
+        case .deny: return "Always deny"
+        }
+    }
+}
+
+struct MCPSamplingRequest {
+    let serverId: UUID
+    let serverName: String
+    let messages: [[String: Any]]
+    let systemPrompt: String?
+    let maxTokens: Int?
+    let temperature: Double?
+    let hints: [String]
+
+    init?(serverId: UUID, serverName: String, params: [String: Any]) {
+        guard let messages = params["messages"] as? [[String: Any]] else { return nil }
+        self.serverId = serverId
+        self.serverName = serverName
+        self.messages = messages
+        self.systemPrompt = params["systemPrompt"] as? String
+        self.maxTokens = (params["maxTokens"] as? NSNumber)?.intValue
+        self.temperature = params["temperature"] as? Double
+        if let preferences = params["modelPreferences"] as? [String: Any],
+           let hints = preferences["hints"] as? [[String: Any]] {
+            self.hints = hints.compactMap { $0["name"] as? String }
+        } else {
+            self.hints = []
+        }
+    }
+
+    var promptPreview: String {
+        var parts: [String] = []
+        for message in messages {
+            let role = message["role"] as? String ?? "user"
+            if let content = message["content"] as? String, !content.isEmpty {
+                parts.append("[\(role)]\n\(content)\n")
+            } else if let contentArray = message["content"] as? [[String: Any]] {
+                let texts = contentArray.compactMap { $0["text"] as? String }
+                if !texts.isEmpty {
+                    parts.append("[\(role)]\n\(texts.joined(separator: "\n"))\n")
+                } else if let type = contentArray.first?["type"] as? String {
+                    parts.append("[\(role)]\n[\(type) message]\n")
+                }
+            }
+        }
+        return parts.joined(separator: "\n")
+    }
+}
+
+enum MCPSamplingAction {
+    case allow(responseText: String?)
+    case cancel
+}
+
+struct MCPSamplingPresentation: Identifiable {
+    let id = UUID()
+    let request: MCPSamplingRequest
+    var responseText: String?
+    var modelName: String?
+    var isGenerating = false
+    var errorMessage: String?
+}
+
+// MARK: - Elicitation
+
+struct MCPElicitationField {
+    let name: String
+    let title: String?
+    let description: String?
+    let type: String
+    let format: String?
+    let enumValues: [String]
+    let enumNames: [String]
+    let minimum: Double?
+    let maximum: Double?
+    let minLength: Int?
+    let maxLength: Int?
+    let defaultValue: Any?
+}
+
+struct MCPElicitationSchema {
+    let properties: [MCPElicitationField]
+    let required: Set<String>
+
+    init?(json: Any?) {
+        guard let dict = json as? [String: Any],
+              let propertiesDict = dict["properties"] as? [String: Any] else { return nil }
+        var fields: [MCPElicitationField] = []
+        for (name, raw) in propertiesDict {
+            guard let fieldDict = raw as? [String: Any] else { continue }
+            let fieldType = fieldDict["type"] as? String ?? "string"
+            fields.append(MCPElicitationField(
+                name: name,
+                title: fieldDict["title"] as? String,
+                description: fieldDict["description"] as? String,
+                type: fieldType,
+                format: fieldDict["format"] as? String,
+                enumValues: fieldDict["enum"] as? [String] ?? [],
+                enumNames: fieldDict["enumNames"] as? [String] ?? [],
+                minimum: fieldDict["minimum"] as? Double,
+                maximum: fieldDict["maximum"] as? Double,
+                minLength: fieldDict["minLength"] as? Int,
+                maxLength: fieldDict["maxLength"] as? Int,
+                defaultValue: fieldDict["default"]
+            ))
+        }
+        self.properties = fields
+        self.required = Set(dict["required"] as? [String] ?? [])
+    }
+}
+
+struct MCPElicitationRequest {
+    let serverId: UUID
+    let serverName: String
+    let message: String
+    let schema: MCPElicitationSchema?
+
+    init?(serverId: UUID, serverName: String, params: [String: Any]) {
+        guard let message = params["message"] as? String else { return nil }
+        self.serverId = serverId
+        self.serverName = serverName
+        self.message = message
+        self.schema = MCPElicitationSchema(json: params["requestedSchema"])
+    }
+}
+
+enum MCPElicitationAction {
+    case submit([String: Any])
+    case decline
+    case cancel
+}
+
+struct MCPElicitationPresentation: Identifiable {
+    let id = UUID()
+    let request: MCPElicitationRequest
+}
+
+// MARK: - OAuth
+
+struct MCPAuthToken: Codable {
+    var accessToken: String
+    var refreshToken: String?
+    var expiresAt: Date?
+    var tokenType: String?
+
+    var isExpired: Bool {
+        guard let expiresAt else { return false }
+        return Date().addingTimeInterval(30) > expiresAt
+    }
+}
+
+struct MCPOAuthSession: Codable {
+    var clientID: String
+    var clientSecret: String?
+    var authorizationEndpoint: String
+    var tokenEndpoint: String
+    var registrationEndpoint: String?
+    var revocationEndpoint: String?
+    var asMetadataURL: String
+    var resourceURI: String
+}
+
+// MARK: - Store
+
+/// Owns the list of configured MCP servers, their persistent config, live connections,
+/// the merged tool catalog, and the inbound sampling / elicitation request pipeline.
 @MainActor
 final class MCPServerStore: ObservableObject {
     static let shared = MCPServerStore()
@@ -97,12 +275,34 @@ final class MCPServerStore: ObservableObject {
     @Published private(set) var lastError: String?
     @Published private(set) var progress: MCPProgress?
 
+    @Published var pendingSampling: MCPSamplingPresentation?
+    @Published var pendingElicitation: MCPElicitationPresentation?
+
+    @Published var samplingPolicy: MCPSamplingPolicy {
+        didSet { UserDefaults.standard.set(samplingPolicy.rawValue, forKey: "mcpSamplingPolicy") }
+    }
+    @Published var toolResultCacheEnabled: Bool {
+        didSet { UserDefaults.standard.set(toolResultCacheEnabled, forKey: "mcpToolResultCacheEnabled") }
+    }
+
+    /// The LLM model used to fulfill server sampling requests.
+    var samplingModelName: String?
+
     private let storageKey = "mcpServers"
     private var clients: [UUID: MCPClient] = [:]
+    private var streamTasks: [UUID: Task<Void, Never>] = [:]
     private var connectedServerIds: Set<UUID> = []
     private var toolCache: [UUID: [MCPTool]] = [:]
+    private var toolResultCache: [String: (MCPToolResult, Date)] = [:]
+
+    private var samplingContinuation: CheckedContinuation<MCPSamplingAction, Never>?
+    private var elicitationContinuation: CheckedContinuation<MCPElicitationAction, Never>?
+
+    private let toolCacheTTL: TimeInterval = 60
 
     init() {
+        samplingPolicy = MCPSamplingPolicy(rawValue: UserDefaults.standard.integer(forKey: "mcpSamplingPolicy")) ?? .askAlways
+        toolResultCacheEnabled = UserDefaults.standard.bool(forKey: "mcpToolResultCacheEnabled")
         load()
     }
 
@@ -126,6 +326,8 @@ final class MCPServerStore: ObservableObject {
         lastError = nil
     }
 
+    // MARK: - Connection
+
     func connectAll() async {
         guard hasEnabledServers, !isConnecting else { return }
         isConnecting = true
@@ -139,9 +341,11 @@ final class MCPServerStore: ObservableObject {
     }
 
     func reconnect(_ server: MCPServerConfig) async {
+        stopServerStream(for: server.id)
         clients[server.id] = nil
         connectedServerIds.remove(server.id)
         toolCache.removeValue(forKey: server.id)
+        resetPendingRequests()
         rebuildTools()
         await connect(server)
         rebuildTools()
@@ -156,6 +360,54 @@ final class MCPServerStore: ObservableObject {
             return
         }
 
+        let client = makeClient(for: server, url: url)
+        clients[server.id] = client
+
+        do {
+            try await connectWithRetries(server: server, client: client)
+            startServerStream(server: server, client: client)
+        } catch {
+            clients[server.id] = nil
+            connectedServerIds.remove(server.id)
+            lastError = "\(server.name): \(error.localizedDescription)"
+        }
+    }
+
+    private func connectWithRetries(server: MCPServerConfig, client: MCPClient) async throws {
+        do {
+            try await establishSession(server: server, client: client)
+        } catch let error as MCPConnectionError where error.isSessionExpired {
+            client.clearSessionId()
+            try await establishSession(server: server, client: client)
+        } catch let error as MCPConnectionError where error.isUnauthorized {
+            try await ensureAuthorized(for: server)
+            try await establishSession(server: server, client: client)
+        }
+    }
+
+    private func establishSession(server: MCPServerConfig, client: MCPClient) async throws {
+        let info = try await client.initialize()
+        let tools = try await client.listTools()
+        toolCache[server.id] = tools
+        connectedServerIds.insert(server.id)
+        updateSession(for: server, sessionId: client.sessionId, serverInfo: "\(info.name) \(info.version)")
+    }
+
+    private func reestablishSession(server: MCPServerConfig) async {
+        guard connectedServerIds.contains(server.id), let client = clients[server.id] else { return }
+        stopServerStream(for: server.id)
+        resetPendingRequests()
+        client.clearSessionId()
+        do {
+            try await connectWithRetries(server: server, client: client)
+            startServerStream(server: server, client: client)
+            rebuildTools()
+        } catch {
+            lastError = "\(server.name): \(error.localizedDescription)"
+        }
+    }
+
+    private func makeClient(for server: MCPServerConfig, url: URL) -> MCPClient {
         let client = MCPClient(
             serverId: server.id,
             serverName: server.name,
@@ -164,33 +416,234 @@ final class MCPServerStore: ObservableObject {
             additionalHeaders: server.headers,
             sessionId: server.sessionId
         )
-        clients[server.id] = client
 
-        do {
-            let info = try await client.initialize()
-            let tools = try await client.listTools()
-            toolCache[server.id] = tools
-            connectedServerIds.insert(server.id)
-            updateSession(for: server, sessionId: client.sessionId, serverInfo: "\(info.name) \(info.version)")
-        } catch let error as MCPConnectionError where error.isSessionExpired {
-            client.clearSessionId()
-            do {
-                let info = try await client.initialize()
-                let tools = try await client.listTools()
-                toolCache[server.id] = tools
-                connectedServerIds.insert(server.id)
-                updateSession(for: server, sessionId: client.sessionId, serverInfo: "\(info.name) \(info.version)")
-            } catch {
-                clients[server.id] = nil
-                connectedServerIds.remove(server.id)
-                lastError = "\(server.name): \(error.localizedDescription)"
+        client.onInboundRequest = { [weak self, server] inbound in
+            guard let self else { return nil }
+            return await self.handleInbound(inbound, for: server)
+        }
+
+        client.on401Unauthorized = { [weak self, server] in
+            guard let self else { return }
+            try await self.ensureAuthorized(for: server)
+            let token = MCPTokenStore.load(serverId: server.id)
+            if let token {
+                self.clients[server.id]?.updateAuthToken("Bearer \(token.accessToken)")
             }
+        }
+
+        client.onSessionExpired = { [weak self, server] in
+            guard let self else { return }
+            await self.reestablishSession(server: server)
+        }
+
+        return client
+    }
+
+    private func startServerStream(server: MCPServerConfig, client: MCPClient) {
+        streamTasks[server.id]?.cancel()
+        let task = Task { [weak client] in
+            await client?.startServerStream()
+        }
+        streamTasks[server.id] = task
+    }
+
+    private func stopServerStream(for serverId: UUID) {
+        streamTasks[serverId]?.cancel()
+        streamTasks[serverId] = nil
+    }
+
+    // MARK: - Inbound requests
+
+    private func handleInbound(_ inbound: MCPInboundRequest, for server: MCPServerConfig) async -> MCPInboundResult? {
+        let params: [String: Any]
+        do {
+            params = try Self.parseJSON(inbound.params)
         } catch {
-            clients[server.id] = nil
-            connectedServerIds.remove(server.id)
-            lastError = "\(server.name): \(error.localizedDescription)"
+            return MCPInboundResult(errorCode: -32700, errorMessage: "Parse error")
+        }
+
+        switch inbound.method {
+        case "sampling/createMessage":
+            guard let request = MCPSamplingRequest(serverId: server.id, serverName: server.name, params: params) else {
+                return MCPInboundResult(errorCode: -32602, errorMessage: "Invalid sampling request")
+            }
+            return await handleSampling(request)
+        case "elicitation/create":
+            guard let request = MCPElicitationRequest(serverId: server.id, serverName: server.name, params: params) else {
+                return MCPInboundResult(errorCode: -32602, errorMessage: "Invalid elicitation request")
+            }
+            return await handleElicitation(request)
+        default:
+            return MCPInboundResult(errorCode: -32601, errorMessage: "Method not supported: \(inbound.method)")
         }
     }
+
+    private func handleSampling(_ request: MCPSamplingRequest) async -> MCPInboundResult {
+        let action: MCPSamplingAction
+        switch samplingPolicy {
+        case .askAlways:
+            action = await presentSampling(request)
+        case .allowAlways:
+            action = .allow(responseText: nil)
+        case .deny:
+            action = .cancel
+        }
+
+        let responseText: String?
+        switch action {
+        case .cancel:
+            return MCPInboundResult(errorCode: -1, errorMessage: "User rejected the sampling request")
+        case .allow(let preview):
+            responseText = preview
+        }
+
+        guard let model = samplingModelName else {
+            return MCPInboundResult(errorCode: -32603, errorMessage: "No LLM model is configured for sampling")
+        }
+
+        do {
+            let text: String
+            if let responseText, !responseText.isEmpty {
+                text = responseText
+            } else {
+                text = try await sample(request: request, model: model)
+            }
+            let payload: [String: Any] = [
+                "role": "assistant",
+                "content": ["type": "text", "text": text],
+                "model": model,
+                "stopReason": "endTurn"
+            ]
+            return MCPInboundResult(result: payload)
+        } catch {
+            return MCPInboundResult(errorCode: -32603, errorMessage: "Sampling failed: \(error.localizedDescription)")
+        }
+    }
+
+    private func handleElicitation(_ request: MCPElicitationRequest) async -> MCPInboundResult {
+        let action = await presentElicitation(request)
+        switch action {
+        case .submit(let content):
+            return MCPInboundResult(result: ["action": "accept", "content": content])
+        case .decline:
+            return MCPInboundResult(result: ["action": "decline"])
+        case .cancel:
+            return MCPInboundResult(result: ["action": "cancel"])
+        }
+    }
+
+    private func presentSampling(_ request: MCPSamplingRequest) async -> MCPSamplingAction {
+        pendingSampling = MCPSamplingPresentation(request: request)
+        let action: MCPSamplingAction = await withCheckedContinuation { continuation in
+            samplingContinuation = continuation
+        }
+        pendingSampling = nil
+        return action
+    }
+
+    private func presentElicitation(_ request: MCPElicitationRequest) async -> MCPElicitationAction {
+        pendingElicitation = MCPElicitationPresentation(request: request)
+        let action: MCPElicitationAction = await withCheckedContinuation { continuation in
+            elicitationContinuation = continuation
+        }
+        pendingElicitation = nil
+        return action
+    }
+
+    func respondToSampling(_ action: MCPSamplingAction) {
+        guard let continuation = samplingContinuation else { return }
+        samplingContinuation = nil
+        continuation.resume(returning: action)
+    }
+
+    func respondToElicitation(_ action: MCPElicitationAction) {
+        guard let continuation = elicitationContinuation else { return }
+        elicitationContinuation = nil
+        continuation.resume(returning: action)
+    }
+
+    private func resetPendingRequests() {
+        if let continuation = samplingContinuation {
+            samplingContinuation = nil
+            continuation.resume(returning: .cancel)
+        }
+        if let continuation = elicitationContinuation {
+            elicitationContinuation = nil
+            continuation.resume(returning: .cancel)
+        }
+        pendingSampling = nil
+        pendingElicitation = nil
+    }
+
+    // MARK: - Sampling generation
+
+    func startSamplingGeneration() {
+        guard var presentation = pendingSampling else { return }
+        guard let model = samplingModelName else {
+            presentation.errorMessage = "No LLM model is configured for sampling"
+            pendingSampling = presentation
+            return
+        }
+        presentation.isGenerating = true
+        presentation.errorMessage = nil
+        pendingSampling = presentation
+
+        Task { @MainActor in
+            do {
+                let text = try await sample(request: presentation.request, model: model)
+                var updated = self.pendingSampling ?? presentation
+                updated.responseText = text
+                updated.modelName = model
+                updated.isGenerating = false
+                self.pendingSampling = updated
+            } catch {
+                var updated = self.pendingSampling ?? presentation
+                updated.isGenerating = false
+                updated.errorMessage = error.localizedDescription
+                self.pendingSampling = updated
+            }
+        }
+    }
+
+    private func sample(request: MCPSamplingRequest, model: String) async throws -> String {
+        let messages = Self.buildSamplingMessages(request)
+        let service: any ChatCompletionProviding = OpenAIService.shared
+        let completion = try await service.chatCompletion(messages: messages, model: model, temperature: request.temperature, tools: nil)
+        guard let content = completion.content, !content.isEmpty else {
+            throw MCPConnectionError.jsonRPC(-31002, "Sampling produced no output")
+        }
+        return content
+    }
+
+    private static func buildSamplingMessages(_ request: MCPSamplingRequest) -> [ChatMessage] {
+        var messages: [ChatMessage] = []
+        if let systemPrompt = request.systemPrompt, !systemPrompt.isEmpty {
+            messages.append(ChatMessage(role: .system, content: systemPrompt))
+        }
+        for item in request.messages {
+            let role = ChatMessage.Role(rawValue: item["role"] as? String ?? "user") ?? .user
+            let text: String
+            if let content = item["content"] as? String {
+                text = content
+            } else if let contentArray = item["content"] as? [[String: Any]] {
+                text = contentArray.compactMap { $0["text"] as? String }.joined(separator: "\n")
+            } else {
+                text = ""
+            }
+            guard !text.isEmpty else { continue }
+            messages.append(ChatMessage(role: role, content: text))
+        }
+        return messages
+    }
+
+    private static func parseJSON(_ data: Data) throws -> [String: Any] {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw MCPConnectionError.invalidResponse
+        }
+        return json
+    }
+
+    // MARK: - Tool execution
 
     func executeTool(name: String, argumentsJSON: String) async -> MCPToolResult {
         guard let tool = tools.first(where: { $0.name == name }) else {
@@ -209,16 +662,85 @@ final class MCPServerStore: ObservableObject {
             arguments = [:]
         }
 
+        if toolResultCacheEnabled {
+            let key = "\(tool.name):\(Self.hashKey(Self.canonicalArgumentsJSON(arguments)))"
+            if let cached = toolResultCache[key], Date().timeIntervalSince(cached.1) < toolCacheTTL {
+                return cached.0
+            }
+        }
+
+        progress = nil
         do {
-            return try await client.callTool(name: tool.name, arguments: arguments) { [weak self] progress in
+            let result = try await client.callTool(
+                name: tool.name,
+                arguments: arguments
+            ) { [weak self] progress in
                 Task { @MainActor in
                     self?.progress = progress
                 }
             }
+
+            if toolResultCacheEnabled {
+                let key = "\(tool.name):\(Self.hashKey(Self.canonicalArgumentsJSON(arguments)))"
+                toolResultCache[key] = (result, Date())
+            }
+            progress = nil
+            return result
+        } catch let error as MCPConnectionError where error.isSessionExpired {
+            progress = nil
+            await client.onSessionExpired?()
+            return MCPToolResult(content: "Tool '\(tool.name)' failed because the MCP session expired. Please try again.")
+        } catch let error as MCPConnectionError {
+            progress = nil
+            return MCPToolResult(content: "Tool '\(tool.name)' failed: \(error.localizedDescription)")
         } catch {
+            progress = nil
             return MCPToolResult(content: "Tool '\(tool.name)' failed: \(error.localizedDescription)")
         }
     }
+
+    private static func canonicalArgumentsJSON(_ arguments: [String: Any]) -> String {
+        guard let data = try? JSONSerialization.data(withJSONObject: arguments, options: [.sortedKeys]) else {
+            return ""
+        }
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+
+    private static func hashKey(_ string: String) -> String {
+        let digest = SHA256.hash(data: Data(string.utf8))
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    // MARK: - Authorization
+
+    func hasOAuthToken(for server: MCPServerConfig) -> Bool {
+        MCPTokenStore.load(serverId: server.id) != nil
+    }
+
+    func signIn(server: MCPServerConfig) async {
+        do {
+            let token = try await MCPOAuthClient.shared.obtainToken(for: server)
+            clients[server.id]?.updateAuthToken("Bearer \(token.accessToken)")
+            if !connectedServerIds.contains(server.id) {
+                await connect(server)
+                rebuildTools()
+            }
+        } catch {
+            lastError = "\(server.name): authorization failed - \(error.localizedDescription)"
+        }
+    }
+
+    func signOut(server: MCPServerConfig) {
+        MCPTokenStore.delete(serverId: server.id)
+        clients[server.id]?.updateAuthToken("")
+    }
+
+    private func ensureAuthorized(for server: MCPServerConfig) async throws {
+        let token = try await MCPOAuthClient.shared.obtainToken(for: server)
+        clients[server.id]?.updateAuthToken("Bearer \(token.accessToken)")
+    }
+
+    // MARK: - CRUD
 
     func upsert(_ server: MCPServerConfig) {
         var copy = server
@@ -234,6 +756,7 @@ final class MCPServerStore: ObservableObject {
     }
 
     func remove(_ server: MCPServerConfig) {
+        stopServerStream(for: server.id)
         clients[server.id] = nil
         connectedServerIds.remove(server.id)
         toolCache.removeValue(forKey: server.id)

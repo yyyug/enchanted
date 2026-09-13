@@ -349,31 +349,48 @@ class MCPToolManager: ObservableObject {
 
 ## 里程碑計劃
 
+> 狀態：Phase 1 與 Phase 2 已完成並驗證（CI builds unsigned IPA）；Phase 3 已完成實作（2026-09-13），待最終 CI 驗證。
+
 ### Phase 1 — 基礎 MCP 連接與工具呼叫（2–3 週）
 
-- [ ] MCPClient：JSON-RPC 2.0 over Streamable HTTP
-- [ ] `initialize` + `tools/list` 請求
-- [ ] 工具 schema 轉 OpenAI tools 格式
-- [ ] `tools/call` 執行
-- [ ] 設定頁：新增 / 編輯 / 刪除 / 啟停 MCP 伺服器
-- [ ] 基本 Agentic Loop（LLM → tool_calls → 執行 → LLM）
-- [ ] max iterations 限制 + 取消按鈕
+- [x] MCPClient：JSON-RPC 2.0 over Streamable HTTP
+- [x] `initialize` + `tools/list` 請求
+- [x] 工具 schema 轉 OpenAI tools 格式
+- [x] `tools/call` 執行
+- [x] 設定頁：新增 / 編輯 / 刪除 / 啟停 MCP 伺服器
+- [x] 基本 Agentic Loop（LLM → tool_calls → 執行 → LLM）
+- [x] max iterations 限制 + 取消按鈕
 
 ### Phase 2 — 進階 MCP 功能（2–3 週）
 
-- [ ] Session resumption（session ID 持久化）
-- [ ] Progress notifications（即時進度顯示）
-- [ ] Sampling（伺服器反向請求 LLM）
-- [ ] Elicitation（動態表單 UI）
-- [ ] OAuth 授權流程（PKCE + token 持久化）
+- [x] Session resumption（session ID 持久化）
+- [x] Progress notifications（即時進度顯示）
+- [x] Sampling（伺服器反向請求 LLM）
+- [x] Elicitation（動態表單 UI）
+- [x] OAuth 授權流程（PKCE + token 持久化）
 
 ### Phase 3 — 完善與穩定（1 週）
 
-- [ ] 錯誤處理與重試機制
-- [ ] 工具執行逾時
-- [ ] 多伺服器並行支援穩定化
-- [ ] 工具結果快取
-- [ ] 本地化（zh-TW, zh-Hans, en）
+- [x] 錯誤處理與重試機制
+- [x] 工具執行逾時
+- [x] 多伺服器並行支援穩定化
+- [x] 工具結果快取
+- [x] 本地化（zh-TW, zh-Hant, zh-HK, zh-Hans, en）
+
+---
+
+## 實作備註（2026-09-13）
+
+- 協定版本固定為 `2025-06-18`；所有 HTTP 請求帶 `MCP-Protocol-Version` header，init 後送 `notifications/initialized`。
+- `initialize` 宣告 `capabilities: { sampling, elicitation }`；支援版本集合 {2024-10-07, 2024-11-05, 2025-03-26, 2025-06-18}。
+- 新增長連線 GET SSE stream（`startServerStream`）接收 server → client 請求與通知，支援 `Last-Event-ID` resume 與 `Mcp-Session-Id`。
+- 用戶端送出 `tools/call` 時帶 `_meta.progressToken`；`notifications/progress` 路由到對應 progress handler 更新 UI。
+- `notifications/cancelled`：逾時或中斷時對所有 in-flight requests 送出。
+- OAuth 2.1：`/.well-known/oauth-protected-resource` → AS metadata discovery、RFC 7591 dynamic registration、PKCE（S256）、自訂 scheme `enchanted://oauth/callback`、Keychain + UserDefaults fallback 儲存 token。
+- Sampling：policy（Always ask / Auto-approve / Always deny）於設定頁可調；allow 時可先驗證生成的 response 再送伺服器。
+- Elicitation：依 JSON Schema 動態產生表單（TextField / Toggle / Picker），含必填、範圍、長度、email/URL 格式驗證。
+- 工具並行執行（`withTaskGroup`）＋ 工具結果快取（SHA256(sorted-keys arguments)，TTL 60 秒，可在設定啟用）。
+- 新增檔案：`Services/MCPOAuth.swift`、`UI/Shared/MCP/MCPSamplingView.swift`、`UI/Shared/MCP/MCPElicitationView.swift`；`Info.plist` 增加 `CFBundleURLTypes`（scheme `enchanted`）。
 
 ---
 

@@ -14,6 +14,7 @@ struct ApplicationEntry: View {
     @State private var conversationStore = ConversationStore.shared
     @State private var completionsStore = CompletionsStore.shared
     @State private var appStore = AppStore.shared
+    @ObservedObject private var mcpStore = MCPServerStore.shared
     
     var body: some View {
         VStack {
@@ -47,6 +48,16 @@ struct ApplicationEntry: View {
             }
         }
         .preferredColorScheme(colorScheme.toiOSFormat)
+        .sheet(item: $mcpStore.pendingSampling) { _ in
+            MCPSamplingView()
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(item: $mcpStore.pendingElicitation) { _ in
+            MCPElicitationView()
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
     }
 }
 

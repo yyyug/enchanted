@@ -18,31 +18,50 @@ struct MCPServerSettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                if store.servers.isEmpty {
-                    Text("No MCP servers configured. Add one to enable tool calling.")
-                        .foregroundColor(.secondary)
-                        .padding(.vertical, 6)
+                Section {
+                    Picker(NSLocalizedString("Sampling", comment: "Sampling policy label"), selection: $store.samplingPolicy) {
+                        ForEach(MCPSamplingPolicy.allCases) { policy in
+                            Text(NSLocalizedString(policy.title, comment: "Sampling policy option")).tag(policy)
+                        }
+                    }
+                    .pickerStyle(.menu)
+
+                    Toggle(NSLocalizedString("Cache tool results (60s)", comment: "Tool result cache toggle"), isOn: $store.toolResultCacheEnabled)
+                } header: {
+                    Text(NSLocalizedString("MCP Settings", comment: "MCP settings section header"))
+                } footer: {
+                    Text(NSLocalizedString("Sampling controls how servers may request LLM completions directly.", comment: "Sampling settings footer"))
                 }
 
-                ForEach(store.servers) { server in
-                    serverRow(server)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            editingServer = server
-                        }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                store.remove(server)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                Section {
+                    if store.servers.isEmpty {
+                        Text(NSLocalizedString("No MCP servers configured. Add one to enable tool calling.", comment: "Empty MCP servers message"))
+                            .foregroundColor(.secondary)
+                            .padding(.vertical, 6)
+                    }
+
+                    ForEach(store.servers) { server in
+                        serverRow(server)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                editingServer = server
                             }
-                        }
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    store.remove(server)
+                                } label: {
+                                    Label(NSLocalizedString("Delete", comment: "Delete button"), systemImage: "trash")
+                                }
+                            }
+                    }
+                } header: {
+                    Text(NSLocalizedString("Servers", comment: "MCP servers section header"))
                 }
             }
-            .navigationTitle("MCP Servers")
+            .navigationTitle(NSLocalizedString("MCP Servers", comment: "MCP servers title"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
+                    Button(NSLocalizedString("Done", comment: "Done button")) { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -50,7 +69,7 @@ struct MCPServerSettingsView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .accessibilityLabel("Add MCP server")
+                    .accessibilityLabel(NSLocalizedString("Add MCP server", comment: "Add MCP server button"))
                 }
             }
             .sheet(isPresented: $addingServer) {
@@ -66,8 +85,8 @@ struct MCPServerSettingsView: View {
                     showingError = true
                 }
             }
-            .alert("MCP Server Error", isPresented: $showingError) {
-                Button("OK", role: .cancel) { store.clearLastError() }
+            .alert(NSLocalizedString("MCP Server Error", comment: "MCP server error alert title"), isPresented: $showingError) {
+                Button(NSLocalizedString("OK", comment: "OK button"), role: .cancel) { store.clearLastError() }
             } message: {
                 Text(store.lastError ?? "")
             }
@@ -89,13 +108,41 @@ struct MCPServerSettingsView: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+                if store.hasOAuthToken(for: server) {
+                    Label(NSLocalizedString("OAuth authorized", comment: "OAuth authorized label"), systemImage: "checkmark.shield")
+                        .font(.caption2)
+                        .foregroundColor(.green)
+                }
             }
 
             Spacer()
 
-            Text("\(store.toolCount(for: server)) tools")
+            VStack(alignment: .trailing, spacing: 6) {
+                VStack(alignment: .trailing, spacing: 6) {
+                Text(String.localizedStringWithFormat(
+                    NSLocalizedString("%lld tools", comment: "Tool count"),
+                    store.toolCount(for: server)
+                ))
                 .font(.caption)
                 .foregroundColor(.secondary)
+
+                Button {
+                    if store.hasOAuthToken(for: server) {
+                        store.signOut(server: server)
+                    } else {
+                        Task {
+                            await store.signIn(server: server)
+                        }
+                    }
+                } label: {
+                    Text(store.hasOAuthToken(for: server)
+                         ? NSLocalizedString("Sign Out", comment: "Sign out button")
+                         : NSLocalizedString("Sign In", comment: "Sign in button"))
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .disabled(!server.isEnabled)
+            }
         }
         .padding(.vertical, 2)
     }

@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-struct ChatMessage {
+struct ChatMessage: Sendable {
     enum Role: String {
         case system
         case user
@@ -31,7 +31,7 @@ struct ChatMessage {
     }
 }
 
-struct ChatToolCall: Codable {
+struct ChatToolCall: Codable, Sendable {
     let id: String
     let type: String?
     let function: ChatToolCallFunction
@@ -48,7 +48,7 @@ struct ChatToolCall: Codable {
     }
 }
 
-struct ChatToolCallFunction: Codable {
+struct ChatToolCallFunction: Codable, Sendable {
     let name: String
     let arguments: String
 }
@@ -59,7 +59,7 @@ struct ChatRequest {
     let temperature: Double?
 }
 
-struct ChatCompletionMessage {
+struct ChatCompletionMessage: Sendable {
     let content: String?
     let toolCalls: [ChatToolCall]
 }

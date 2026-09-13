@@ -180,6 +180,7 @@ conversationState = .loading()
 
             if await service.reachable() {
                 let mcpStore = MCPServerStore.shared
+                mcpStore.samplingModelName = model.name
                 if mcpStore.hasEnabledServers {
                     await mcpStore.connectAll()
                 }
@@ -315,25 +316,38 @@ conversationState = .loading()
                 break
             }
 
-            for toolCall in completion.toolCalls {
-                if Task.isCancelled {
-                    handleComplete()
-                    return
-                }
+            if !completion.toolCalls.isEmpty {
                 withAnimation {
-                    conversationState = .loading(message: "Running tool: \(toolCall.function.name)")
+                    conversationState = .loading(message: "Running \(completion.toolCalls.count) tool(s)...")
                 }
-                let result = await MCPServerStore.shared.executeTool(
-                    name: toolCall.function.name,
-                    argumentsJSON: toolCall.function.arguments
-                )
-                workingMessages.append(ChatMessage(
-                    role: .tool,
-                    content: result.content,
-                    images: nil,
-                    toolCallId: toolCall.id,
-                    toolCalls: nil
-                ))
+
+                let mcpStore = MCPServerStore.shared
+                var toolResults: [(String, String)] = []
+                await withTaskGroup(of: (String, String).self) { group in
+                    for toolCall in completion.toolCalls {
+                        if Task.isCancelled { break }
+                        group.addTask {
+                            let result = await mcpStore.executeTool(
+                                name: toolCall.function.name,
+                                argumentsJSON: toolCall.function.arguments
+                            )
+                            return (toolCall.id, result.content)
+                        }
+                    }
+                    for await (id, content) in group {
+                        toolResults.append((id, content))
+                    }
+                }
+
+                for (id, content) in toolResults {
+                    workingMessages.append(ChatMessage(
+                        role: .tool,
+                        content: content,
+                        images: nil,
+                        toolCallId: id,
+                        toolCalls: nil
+                    ))
+                }
             }
         }
 

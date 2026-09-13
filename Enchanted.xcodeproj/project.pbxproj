@@ -108,6 +108,9 @@
 		EE00000000000000000000D2 /* MCPModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000D1 /* MCPModels.swift */; };
 		EE00000000000000000000D4 /* MCPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000D3 /* MCPClient.swift */; };
 		EE00000000000000000000D6 /* MCPServerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000D5 /* MCPServerSettingsView.swift */; };
+		EE00000000000000000000E2 /* MCPOAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000E1 /* MCPOAuth.swift */; };
+		EE00000000000000000000F2 /* MCPSamplingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000F1 /* MCPSamplingView.swift */; };
+		EE00000000000000000000F4 /* MCPElicitationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000F3 /* MCPElicitationView.swift */; };
 		EE00000000000000000000C1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000A1 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -212,6 +215,9 @@
 		EE00000000000000000000D1 /* MCPModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPModels.swift; sourceTree = "<group>"; };
 		EE00000000000000000000D3 /* MCPClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPClient.swift; sourceTree = "<group>"; };
 		EE00000000000000000000D5 /* MCPServerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPServerSettingsView.swift; sourceTree = "<group>"; };
+		EE00000000000000000000E1 /* MCPOAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPOAuth.swift; sourceTree = "<group>"; };
+		EE00000000000000000000F1 /* MCPSamplingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPSamplingView.swift; sourceTree = "<group>"; };
+		EE00000000000000000000F3 /* MCPElicitationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPElicitationView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -545,6 +551,7 @@
 				87365B6CE5C9467296725F32 /* OpenAIService.swift */,
 				EE00000000000000000000D1 /* MCPModels.swift */,
 				EE00000000000000000000D3 /* MCPClient.swift */,
+				EE00000000000000000000E1 /* MCPOAuth.swift */,
 				FF10024F2B25C79F0011A4DC /* SwiftDataService.swift */,
 				FF6B7B122B3EE7AC00E8FEA3 /* Throttler.swift */,
 				FFCF00F02C03209A00590E79 /* SpeechService.swift */,
@@ -571,9 +578,19 @@
 				FF15EF682B826BF400D4A541 /* Components */,
 				FFB56F442C0383A60020AFFD /* Voice */,
 				FF10026B2B2751630011A4DC /* Settings */,
+				EE00000000000000000000F0 /* MCP */,
 				FF1002552B2624790011A4DC /* Sidebar */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		EE00000000000000000000F0 /* MCP */ = {
+			isa = PBXGroup;
+			children = (
+				EE00000000000000000000F1 /* MCPSamplingView.swift */,
+				EE00000000000000000000F3 /* MCPElicitationView.swift */,
+			);
+			path = MCP;
 			sourceTree = "<group>";
 		};
 		FFEC32A82B24795A003E5C04 /* Chat */ = {
@@ -772,6 +789,9 @@
 				EE00000000000000000000D2 /* MCPModels.swift in Sources */,
 				EE00000000000000000000D4 /* MCPClient.swift in Sources */,
 				EE00000000000000000000D6 /* MCPServerSettingsView.swift in Sources */,
+				EE00000000000000000000E2 /* MCPOAuth.swift in Sources */,
+				EE00000000000000000000F2 /* MCPSamplingView.swift in Sources */,
+				EE00000000000000000000F4 /* MCPElicitationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
