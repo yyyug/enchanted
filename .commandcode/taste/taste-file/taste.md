@@ -11,4 +11,11 @@
 - Prefers shared/common settings UI across LLM providers rather than duplicating controls per provider. Confidence: 0.6
 - Prefers toggle controls to appear before related selectors/pickers in settings UI (e.g., enable toggle before voice picker). Confidence: 0.5
 - Values comprehensive accessibility in SwiftUI apps, including accessibility labels on all buttons, Dynamic Type support, Reduce Motion checks, adaptive colors, and header traits. Confidence: 0.7
+- Expects accessibility labels to reflect control state (e.g., toggling "Voice" to "Stop" while recording), decorative images to be hidden from screen readers, and interactive controls to meet adequate touch-target sizes. Confidence: 0.6
 - Values following industry best practices in iOS/SwiftUI development beyond just accessibility. Confidence: 0.6
+- Prefers commit messages without a Co-authored-by attribution trailer. Confidence: 0.9
+- Prefers building and shipping iOS apps as unsigned IPAs via GitHub Actions and downloading the resulting artifact, rather than building locally; also looks for CI build speedups like caching. Confidence: 0.8
+- Verifies that changes are actually present in the pushed code/build artifact before shipping, asking to confirm edits landed. Confidence: 0.6
+- Wants app UIs to localize automatically based on device language, including Chinese Traditional/Simplified and regional variants (Hong Kong, Taiwan, Macau, China), and prefers a language-override option in settings. Confidence: 0.7
+- Prefers user-facing error/status feedback in the UI rather than silent failures (e.g., surface LLM errors in the chat). Confidence: 0.6
+- Wants search/filter capability on long selectable lists (e.g., a search field on the model selector). Confidence: 0.6

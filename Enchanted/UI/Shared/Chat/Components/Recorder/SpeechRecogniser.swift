@@ -97,11 +97,12 @@ final class SpeechRecognizer: ObservableObject {
         }
 
         let candidates: [String]
-        if identifier.hasPrefix("zh") {
+        if identifier.hasPrefix("zh") || identifier.hasPrefix("yue") {
             if identifier.contains("CN") || identifier.contains("Hans") {
                 candidates = ["zh-CN", "zh-Hans", "zh-Hant-TW", "zh-TW", "zh-HK"]
-            } else if identifier.contains("HK") {
-                candidates = ["zh-HK", "yue-CN", "zh-CN", "zh-Hant-TW", "zh-TW"]
+            } else if identifier.contains("HK") || identifier.hasPrefix("yue") {
+                // Cantonese: prefer dedicated yue-HK locale, then zh-HK.
+                candidates = ["yue-HK", "zh-HK", "yue-CN", "zh-CN", "zh-Hant-TW", "zh-TW"]
             } else {
                 // Traditional Chinese default (TW, MO, Hant, or bare zh)
                 candidates = ["zh-Hant-TW", "zh-TW", "zh-HK", "zh-CN"]

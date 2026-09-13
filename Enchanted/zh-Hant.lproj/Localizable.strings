@@ -41,6 +41,9 @@
 /* Speech Recognition Language */
 "Speech Recognition Language" = "語音辨識語言";
 "Auto (Device Language)" = "自動（裝置語言）";
+"Voice Input" = "語音輸入";
+"The language you speak may differ from your device language. Choose the language used for voice input (speech recognition)." = "您所說的語言不一定等同裝置語言。請選擇用於語音輸入（語音辨識）的語言。";
+"Choose the language you speak for voice input. It can differ from your device language." = "請選擇您用於語音輸入時所說的語言。這可以與裝置語言不同。";
 
 /* Voice Settings */
 "Download voices by going to Settings > Accessibility > Spoken Content > Voices." = "前往設定 > 輔助使用 > 朗讀內容 > 語音以下載語音。";

@@ -213,22 +213,32 @@ struct SettingsView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
 
-                // Speech Recognition Language Picker
-                Picker(selection: $speechRecognitionLanguage) {
-                    Text("Auto (Device Language)", comment: "Auto language option").tag("auto")
-                    Text("中文繁體 (繁體中文)", comment: "Chinese Traditional").tag("zh-TW")
-                    Text("中文簡體 (簡體中文)", comment: "Chinese Simplified").tag("zh-CN")
-                    Text("中文 (香港)", comment: "Chinese Hong Kong").tag("zh-HK")
-                    Text("English (US)", comment: "English US").tag("en-US")
-                    Text("English (UK)", comment: "English UK").tag("en-GB")
-                    Text("日本語", comment: "Japanese").tag("ja-JP")
-                    Text("한국어", comment: "Korean").tag("ko-KR")
-                    Text("Español", comment: "Spanish").tag("es-ES")
-                    Text("Français", comment: "French").tag("fr-FR")
-                    Text("Deutsch", comment: "German").tag("de-DE")
-                } label: {
-                    Label("Speech Recognition Language", systemImage: "mic")
-                        .foregroundStyle(Color.label)
+                // Speech Recognition (ASR) language - separate from the device
+                // language and from the spoken-output voice above. Users may
+                // prefer one language but speak another (e.g. Traditional
+                // Chinese UI while speaking Cantonese).
+                Section {
+                    Picker(selection: $speechRecognitionLanguage) {
+                        Text("Auto (Device Language)", comment: "Auto language option").tag("auto")
+                        Text("粵語（香港）", comment: "Cantonese Hong Kong").tag("zh-HK")
+                        Text("中文（台灣繁體）", comment: "Chinese Traditional Taiwan").tag("zh-TW")
+                        Text("中文（簡體）", comment: "Chinese Simplified").tag("zh-CN")
+                        Text("English (US)", comment: "English US").tag("en-US")
+                        Text("English (UK)", comment: "English UK").tag("en-GB")
+                        Text("日本語", comment: "Japanese").tag("ja-JP")
+                        Text("한국어", comment: "Korean").tag("ko-KR")
+                        Text("Español", comment: "Spanish").tag("es-ES")
+                        Text("Français", comment: "French").tag("fr-FR")
+                        Text("Deutsch", comment: "German").tag("de-DE")
+                    } label: {
+                        Label("Speech Recognition Language", systemImage: "mic")
+                            .foregroundStyle(Color.label)
+                    }
+                    .accessibilityHint(NSLocalizedString("Choose the language you speak for voice input. It can differ from your device language.", comment: "Speech recognition language hint"))
+                } header: {
+                    Text("Voice Input", comment: "Voice input section").font(.headline)
+                } footer: {
+                    Text("The language you speak may differ from your device language. Choose the language used for voice input (speech recognition).", comment: "Voice input footer")
                 }
 
 
