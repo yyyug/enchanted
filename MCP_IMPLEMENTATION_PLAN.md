@@ -349,7 +349,7 @@ class MCPToolManager: ObservableObject {
 
 ## 里程碑計劃
 
-> 狀態：Phase 1 與 Phase 2 已完成並驗證（CI builds unsigned IPA）；Phase 3 已完成實作（2026-09-13），待最終 CI 驗證。
+> 狀態：Phase 1 與 Phase 2 已完成並驗證（CI builds unsigned IPA）；Phase 3 已完成實作並通過 CI 驗證（2026-09-13，Build Unsigned IPA 全綠）。
 
 ### Phase 1 — 基礎 MCP 連接與工具呼叫（2–3 週）
 
