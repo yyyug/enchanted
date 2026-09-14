@@ -26,27 +26,35 @@ Last updated: 2026-09-14
 | Screen stays awake while generating (wakelock) | `ConversationStore.setIdleTimerDisabled` |
 | Camera capture for image input | `ChatView_iOS` (`CameraPicker`), `INFOPLIST_KEY_NSCameraUsageDescription` |
 | `reconnect` now clears the tool-result cache | `MCPServerStore.reconnect` |
+| **Per-conversation MCP selection + per-conversation sessions** | `ConversationMCPServer.swift`, `MCPServerStore.activate`, `ConversationStore.activateMCP/setSelectedServers`, `MCPConversationPickerView.swift` |
+| **New-conversation default set (memory)** | `MCPServerStore.defaultServerIDs`, `MCPDefaultServersView` |
+| **Tool chip in the chat header** | `ChatView_iOS` |
+
+### Per-conversation MCP — design notes
+
+- Selection lives in the `ConversationMCPServer` join entity (SwiftData), not as an
+  array on `ConversationSD`, so a deleted server can be cleaned up precisely.
+- MCP **session ids are owned by the conversation**, not the server config
+  (`MCPServerConfig.sessionId` was removed). Two conversations using the same server
+  therefore get independent sessions and cannot leak state into each other.
+- Only the **active conversation's** servers stay connected: `selectConversation`
+  deactivates everything, then `activateMCP` connects just that conversation's set.
+- A conversation whose selection was never configured inherits the default set
+  (Settings → MCP Servers → Tool Execution → New Conversation Default). If the user has
+  never configured a default, it falls back to *all enabled servers*, preserving the
+  pre-existing behaviour on upgrade.
+- Per-server system prompts are now scoped to the conversation's selected servers
+  (`MCPServerStore.systemPrompts(for:)`).
 
 ---
 
 ## Backlog
 
-### B1. Per-conversation MCP server selection + session (item 5) — Deferred
-**Joey:** `mcp_servers` + `conversation_mcp_servers` join table; each conversation
-selects which servers to use and stores its own `sessionId`.
+### B1. Per-conversation MCP server selection + session (item 5) — ✅ DONE
+See "Per-conversation MCP — design notes" above.
 
-**Enchanted today:** `MCPServerStore.connectAll()` connects *every* enabled server
-globally; there is one session per server, not per conversation.
-
-**Plan**
-1. Add `enabledServerIds: [String] = []` to `ConversationSD` (SwiftData additive change).
-2. Add a "Tools" chip in the chat header opening a selection sheet (checkbox list of
-   enabled servers, mirroring Joey's `mcp_server_selection_dialog`).
-3. In `ConversationStore.sendPrompt`, connect only the selected servers and expose only
-   their tools (`availableTools` filtered by selection).
-4. Optionally move `sessionId` into a per-conversation store.
-
-**Risk:** SwiftData schema change + change to the send path. Needs migration testing.
+Remaining follow-up: Joey additionally copies the server set when duplicating a
+conversation; Enchanted has no duplicate-conversation feature at all.
 
 ---
 
