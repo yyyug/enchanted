@@ -49,15 +49,15 @@ final class ConversationStore: Sendable {
         }
     }
 
-    /// Combines the global system prompt with any per-server prompts from
-    /// enabled MCP servers.
+    /// Combines the global system prompt with the per-server prompts of the
+    /// servers this conversation uses.
     @MainActor
-    private static func combinedSystemPrompt(_ base: String) -> String {
+    private static func combinedSystemPrompt(_ base: String, serverIDs: [UUID]) -> String {
         var parts: [String] = []
         if !base.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             parts.append(base)
         }
-        parts.append(contentsOf: MCPServerStore.shared.enabledSystemPrompts)
+        parts.append(contentsOf: MCPServerStore.shared.systemPrompts(for: serverIDs))
         return parts.joined(separator: "\n\n")
     }
 
@@ -119,6 +119,9 @@ final class ConversationStore: Sendable {
     }
     
     func selectConversation(_ conversation: ConversationSD) async throws {
+        // Leaving a conversation tears down its MCP connections; the next send
+        // reactivates whatever that conversation has selected.
+        MCPServerStore.shared.deactivateAll()
         try await reloadConversation(conversation)
     }
     
@@ -191,8 +194,19 @@ final class ConversationStore: Sendable {
                 .prefix(while: {$0.id.uuidString != trimmingMessageId})
         }
 
+        /// Resolve which MCP servers this conversation uses before building the
+        /// system prompt, so the prompt matches the tools we will actually send.
+        /// A conversation that has never been configured inherits the new
+        /// conversation default set.
+        let selectedServerIDs: [UUID]
+        if conversation.mcpSelectionInitialized {
+            selectedServerIDs = conversation.mcpServers.map(\.serverID)
+        } else {
+            selectedServerIDs = MCPServerStore.shared.defaultSelectionForNewConversation()
+        }
+
         /// add system prompt to very first message in the conversation
-        let combinedSystemPrompt = Self.combinedSystemPrompt(systemPrompt)
+        let combinedSystemPrompt = Self.combinedSystemPrompt(systemPrompt, serverIDs: selectedServerIDs)
         if !combinedSystemPrompt.isEmpty && conversation.messages.isEmpty {
             let systemMessage = MessageSD(content: combinedSystemPrompt, role: "system")
             systemMessage.conversation = conversation
@@ -230,6 +244,10 @@ final class ConversationStore: Sendable {
 
         Task {
             try await swiftDataService.updateConversation(conversation)
+            // Materialize the inherited default selection the first time.
+            if !conversation.mcpSelectionInitialized {
+                try? await swiftDataService.setSelectedServerIDs(selectedServerIDs, forConversation: conversation)
+            }
             try await swiftDataService.createMessage(userMessage)
             try await swiftDataService.createMessage(assistantMessage)
             try await reloadConversation(conversation)
@@ -238,8 +256,15 @@ final class ConversationStore: Sendable {
             if await service.reachable() {
                 let mcpStore = MCPServerStore.shared
                 mcpStore.samplingModelName = model.name
-                if mcpStore.hasEnabledServers {
-                    await mcpStore.connectAll()
+
+                let sessions = (try? await swiftDataService.sessionMap(forConversation: conversation.id)) ?? [:]
+                if !selectedServerIDs.isEmpty {
+                    await mcpStore.activate(serverIDs: Set(selectedServerIDs), sessions: sessions)
+                    // Persist any fresh session ids onto this conversation.
+                    try? await swiftDataService.persistSessions(
+                        mcpStore.currentSessionIDs,
+                        forConversation: conversation.id
+                    )
                 }
                 let tools = mcpStore.availableTools
 

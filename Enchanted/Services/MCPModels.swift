@@ -411,13 +411,15 @@ final class MCPServerStore: ObservableObject {
         return servers.filter(\.isEnabled).map(\.id)
     }
 
-    /// Custom system prompts contributed by enabled servers, appended to the
-    /// global system prompt while those servers are enabled.
-    var enabledSystemPrompts: [String] {
-        servers.filter { $0.isEnabled }.compactMap { server in
-            let trimmed = server.systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
-            return (trimmed?.isEmpty == false) ? trimmed : nil
-        }
+    /// Custom system prompts contributed by the given servers.
+    func systemPrompts(for serverIDs: [UUID]) -> [String] {
+        let wanted = Set(serverIDs)
+        return servers
+            .filter { wanted.contains($0.id) }
+            .compactMap { server in
+                let trimmed = server.systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
+                return (trimmed?.isEmpty == false) ? trimmed : nil
+            }
     }
 
     /// Ad-hoc connection test used by the server editor so users can validate a
@@ -479,16 +481,50 @@ final class MCPServerStore: ObservableObject {
 
     // MARK: - Connection
 
-    func connectAll() async {
-        guard hasEnabledServers, !isConnecting else { return }
+    /// Connects exactly the given servers and disconnects everything else.
+    ///
+    /// Only the servers selected by the active conversation are ever connected,
+    /// which keeps the tool catalog scoped to that conversation and avoids
+    /// holding connections for every server the user has configured.
+    ///
+    /// - Parameter sessions: stored MCP session ids per server, so a conversation
+    ///   resumes its own session instead of sharing one globally.
+    func activate(serverIDs: Set<UUID>, sessions: [UUID: String]) async {
+        guard !isConnecting else { return }
         isConnecting = true
         lastError = nil
         defer { isConnecting = false }
 
-        for server in servers where server.isEnabled {
-            await connect(server)
+        for id in connectedServerIds.subtracting(serverIDs) {
+            guard let server = servers.first(where: { $0.id == id }) else { continue }
+            disconnect(server)
+        }
+
+        for server in servers where serverIDs.contains(server.id) && server.isEnabled {
+            if connectedServerIds.contains(server.id) { continue }
+            await connect(server, sessionId: sessions[server.id])
         }
         rebuildTools()
+    }
+
+    /// Tears down every live connection (used when leaving a conversation).
+    func deactivateAll() {
+        for server in servers {
+            disconnect(server)
+        }
+        resetPendingRequests()
+    }
+
+    /// Live MCP session ids keyed by server, so the caller can persist them onto
+    /// the conversation that owns them.
+    var currentSessionIDs: [UUID: String] {
+        var result: [UUID: String] = [:]
+        for (id, client) in clients {
+            if let session = client.sessionId, !session.isEmpty {
+                result[id] = session
+            }
+        }
+        return result
     }
 
     func reconnect(_ server: MCPServerConfig) async {
@@ -504,7 +540,7 @@ final class MCPServerStore: ObservableObject {
         rebuildTools()
     }
 
-    func connect(_ server: MCPServerConfig) async {
+    func connect(_ server: MCPServerConfig, sessionId: String? = nil) async {
         lastError = nil
         if connectedServerIds.contains(server.id) { return }
 
@@ -513,7 +549,7 @@ final class MCPServerStore: ObservableObject {
             return
         }
 
-        let client = makeClient(for: server, url: url)
+        let client = makeClient(for: server, url: url, sessionId: sessionId)
         clients[server.id] = client
 
         do {
@@ -543,7 +579,9 @@ final class MCPServerStore: ObservableObject {
         let tools = try await client.listTools()
         toolCache[server.id] = tools
         connectedServerIds.insert(server.id)
-        updateSession(for: server, sessionId: client.sessionId, serverInfo: "\(info.name) \(info.version)")
+        // Session ids belong to the conversation, not the server config, so only
+        // cache server metadata here.
+        updateServerInfo(for: server, "\(info.name) \(info.version)")
     }
 
     private func reestablishSession(server: MCPServerConfig) async {
@@ -560,14 +598,14 @@ final class MCPServerStore: ObservableObject {
         }
     }
 
-    private func makeClient(for server: MCPServerConfig, url: URL) -> MCPClient {
+    private func makeClient(for server: MCPServerConfig, url: URL, sessionId: String?) -> MCPClient {
         let client = MCPClient(
             serverId: server.id,
             serverName: server.name,
             url: url,
             authToken: server.authToken ?? "",
             additionalHeaders: server.headers,
-            sessionId: server.sessionId
+            sessionId: sessionId
         )
 
         client.onInboundRequest = { [weak self, server] inbound in
@@ -938,10 +976,9 @@ final class MCPServerStore: ObservableObject {
         }
     }
 
-    private func updateSession(for server: MCPServerConfig, sessionId: String?, serverInfo: String?) {
+    private func updateServerInfo(for server: MCPServerConfig, _ serverInfo: String) {
         guard let idx = servers.firstIndex(where: { $0.id == server.id }) else { return }
         var copy = servers[idx]
-        copy.sessionId = sessionId
         copy.serverInfo = serverInfo
         servers[idx] = copy
         save()

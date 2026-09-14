@@ -180,6 +180,29 @@ extension SwiftDataService {
         try conversationMCPServer(serverID: serverID, conversationID: conversationID)?.sessionID
     }
 
+    /// All stored MCP session ids for a conversation, keyed by server.
+    func sessionMap(forConversation conversationID: UUID) throws -> [UUID: String] {
+        let predicate = #Predicate<ConversationMCPServer> { $0.conversation?.id == conversationID }
+        let rows = try modelContext.fetch(FetchDescriptor<ConversationMCPServer>(predicate: predicate))
+        var result: [UUID: String] = [:]
+        for row in rows {
+            if let session = row.sessionID, !session.isEmpty {
+                result[row.serverID] = session
+            }
+        }
+        return result
+    }
+
+    /// Writes back live session ids after a conversation has connected.
+    func persistSessions(_ sessions: [UUID: String], forConversation conversationID: UUID) throws {
+        let predicate = #Predicate<ConversationMCPServer> { $0.conversation?.id == conversationID }
+        let rows = try modelContext.fetch(FetchDescriptor<ConversationMCPServer>(predicate: predicate))
+        for row in rows {
+            row.sessionID = sessions[row.serverID]
+        }
+        try modelContext.saveChanges()
+    }
+
     func setSessionID(_ sessionID: String?, forServerID serverID: UUID, conversationID: UUID) throws {
         guard let row = try conversationMCPServer(serverID: serverID, conversationID: conversationID) else { return }
         row.sessionID = sessionID
