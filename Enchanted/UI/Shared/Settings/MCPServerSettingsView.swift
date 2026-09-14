@@ -447,7 +447,6 @@ struct MCPServerEditorView: View {
                 authToken: token.isEmpty ? nil : token,
                 headers: parsedHeaders,
                 isEnabled: isEnabled,
-                sessionId: server.sessionId,
                 serverInfo: server.serverInfo,
                 systemPrompt: prompt.isEmpty ? nil : prompt,
                 oauthClientId: clientID.isEmpty ? nil : clientID,

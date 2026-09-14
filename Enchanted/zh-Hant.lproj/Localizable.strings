@@ -207,6 +207,7 @@
 "MCP Debug" = "MCP 偵錯";
 "Reconnect" = "重新連線";
 "Session" = "工作階段";
+"Live Session" = "目前工作階段";
 "Server" = "伺服器";
 "Tools" = "工具";
 "No tools discovered." = "未發現任何工具。";

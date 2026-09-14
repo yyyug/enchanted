@@ -32,8 +32,8 @@ struct MCPDebugView: View {
                                     : NSLocalizedString("No", comment: "No"))
                         debugRow(NSLocalizedString("Server", comment: "Debug server info label"),
                                  value: server.serverInfo ?? "—")
-                        debugRow(NSLocalizedString("Session", comment: "Debug session label"),
-                                 value: server.sessionId?.isEmpty == false ? server.sessionId! : "—")
+                        debugRow(NSLocalizedString("Live Session", comment: "Debug live session label"),
+                                 value: store.currentSessionIDs[server.id] ?? "—")
                         debugRow(NSLocalizedString("Tools", comment: "Debug tool count label"),
                                  value: String(store.toolCount(for: server)))
 

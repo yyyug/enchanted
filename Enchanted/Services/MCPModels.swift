@@ -16,7 +16,6 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
     var authToken: String?
     var headers: [String: String]
     var isEnabled: Bool
-    var sessionId: String?
     var serverInfo: String?
     /// Optional custom system prompt appended to the global prompt while this
     /// server is enabled.
@@ -33,7 +32,6 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
         authToken: String? = nil,
         headers: [String: String] = [:],
         isEnabled: Bool = true,
-        sessionId: String? = nil,
         serverInfo: String? = nil,
         systemPrompt: String? = nil,
         oauthClientId: String? = nil,
@@ -45,7 +43,6 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
         self.authToken = authToken
         self.headers = headers
         self.isEnabled = isEnabled
-        self.sessionId = sessionId
         self.serverInfo = serverInfo
         self.systemPrompt = systemPrompt
         self.oauthClientId = oauthClientId
@@ -53,7 +50,7 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case id, name, url, authToken, headers, isEnabled, sessionId, serverInfo
+        case id, name, url, authToken, headers, isEnabled, serverInfo
         case systemPrompt, oauthClientId, oauthClientSecret
     }
 
@@ -65,7 +62,6 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
         authToken = try container.decodeIfPresent(String.self, forKey: .authToken)
         headers = try container.decodeIfPresent([String: String].self, forKey: .headers) ?? [:]
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
-        sessionId = try container.decodeIfPresent(String.self, forKey: .sessionId)
         serverInfo = try container.decodeIfPresent(String.self, forKey: .serverInfo)
         systemPrompt = try container.decodeIfPresent(String.self, forKey: .systemPrompt)
         oauthClientId = try container.decodeIfPresent(String.self, forKey: .oauthClientId)
@@ -947,9 +943,7 @@ final class MCPServerStore: ObservableObject {
     func upsert(_ server: MCPServerConfig) {
         var copy = server
         if let idx = servers.firstIndex(where: { $0.id == server.id }) {
-            let existing = servers[idx]
-            copy.sessionId = existing.sessionId
-            copy.serverInfo = existing.serverInfo
+            copy.serverInfo = servers[idx].serverInfo
             servers[idx] = copy
         } else {
             servers.append(copy)
