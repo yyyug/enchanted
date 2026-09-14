@@ -123,6 +123,31 @@ final class ConversationStore: Sendable {
         // reactivates whatever that conversation has selected.
         await MCPServerStore.shared.deactivateAll()
         try await reloadConversation(conversation)
+        await activateMCP(for: conversation)
+    }
+
+    /// Connects the servers this conversation has selected (inheriting the
+    /// default set the first time) and persists the resulting session ids.
+    @MainActor
+    func activateMCP(for conversation: ConversationSD) async {
+        let store = MCPServerStore.shared
+
+        let serverIDs: [UUID]
+        if conversation.mcpSelectionInitialized {
+            serverIDs = conversation.mcpServers.map(\.serverID)
+        } else {
+            serverIDs = store.defaultSelectionForNewConversation()
+            try? await swiftDataService.setSelectedServerIDs(serverIDs, forConversation: conversation)
+        }
+
+        guard !serverIDs.isEmpty else { return }
+
+        let sessions = (try? await swiftDataService.sessionMap(forConversation: conversation.id)) ?? [:]
+        await store.activate(serverIDs: Set(serverIDs), sessions: sessions)
+        try? await swiftDataService.persistSessions(
+            store.currentSessionIDs,
+            forConversation: conversation.id
+        )
     }
     
     func delete(_ conversation: ConversationSD) async throws {
@@ -286,15 +311,7 @@ final class ConversationStore: Sendable {
                 let mcpStore = MCPServerStore.shared
                 mcpStore.samplingModelName = model.name
 
-                let sessions = (try? await swiftDataService.sessionMap(forConversation: conversation.id)) ?? [:]
-                if !selectedServerIDs.isEmpty {
-                    await mcpStore.activate(serverIDs: Set(selectedServerIDs), sessions: sessions)
-                    // Persist any fresh session ids onto this conversation.
-                    try? await swiftDataService.persistSessions(
-                        mcpStore.currentSessionIDs,
-                        forConversation: conversation.id
-                    )
-                }
+                await activateMCP(for: conversation)
                 let tools = mcpStore.availableTools
 
                 if !tools.isEmpty, let agenticService = service as? any ChatCompletionProviding {
