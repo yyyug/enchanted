@@ -192,12 +192,6 @@ struct ChatView: View {
             }
             .joined(separator: "\n\n---\n\n")
     }
-            .frame(width: 44, height: 44)
-            .contentShape(Rectangle())
-            .accessibilityLabel(NSLocalizedString("New Conversation", comment: "New conversation button"))
-            .accessibilitySortPriority(0)
-        }
-    }
     
     var inputFields: some View {
         HStack(spacing: 8) {
