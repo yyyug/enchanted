@@ -25,5 +25,12 @@
 - Prefers CI/build status to be checked on demand rather than blocking on long waits; will interrupt long sleeps and ask to check whether the build already finished. Confidence: 0.6
 - When cloning external reference repositories for study, wants them placed in a separate folder and excluded from git (commit/push) via .gitignore. Confidence: 0.7
 - Evaluates feature gaps by comparing against a reference open-source app of the same domain and asking for a prioritized list of missing features. Confidence: 0.6
+- Wants proposed technical approaches cross-checked against how a proven reference implementation actually does it in its source (confirming parity in method, not just parity in features) before adopting them. Confidence: 0.5
 - Often wants analysis and comparison only first, with no file changes, and gives an explicit go-ahead before implementation begins (e.g., "暫時不修改檔案", "just reply on this point no change yet"). Confidence: 0.7
 - Wants clear status reporting that distinguishes what has been fixed/completed from what is still pending. Confidence: 0.6
+- Wants first-class VoiceOver support, including custom accessibility actions/gestures (e.g. iOS Magic Tap) so a screen-reader user can dictate and send with fewer gestures instead of locating separate voice/stop/send buttons. Confidence: 0.65
+- Prefers user-controlled explicit start/stop over automatic behavior in interaction flows (e.g. disabling silence-based auto-stop when a gesture drives recording start and stop). Confidence: 0.55
+- Values minimizing the number of manual taps/gestures needed for common actions, treating fewer interactions as faster and better UX. Confidence: 0.6
+- Communicates in Cantonese (Traditional Chinese) mixed with English technical terms, and expects the conversation and explanations in the same language. Confidence: 0.7
+- When given a prioritized list of gaps, approves implementing selected items while asking for a detailed explanation of the remaining ones before deciding on them. Confidence: 0.6
+- Wants explanations of proposed features backed by concrete usage examples and step-by-step configuration/setup instructions, not just abstract reasoning about why it matters. Confidence: 0.55

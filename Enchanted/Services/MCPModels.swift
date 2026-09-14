@@ -18,6 +18,13 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
     var isEnabled: Bool
     var sessionId: String?
     var serverInfo: String?
+    /// Optional custom system prompt appended to the global prompt while this
+    /// server is enabled.
+    var systemPrompt: String?
+    /// Optional manual OAuth client credentials. When set, dynamic client
+    /// registration is skipped.
+    var oauthClientId: String?
+    var oauthClientSecret: String?
 
     init(
         id: UUID = UUID(),
@@ -27,7 +34,10 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
         headers: [String: String] = [:],
         isEnabled: Bool = true,
         sessionId: String? = nil,
-        serverInfo: String? = nil
+        serverInfo: String? = nil,
+        systemPrompt: String? = nil,
+        oauthClientId: String? = nil,
+        oauthClientSecret: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -37,10 +47,14 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
         self.isEnabled = isEnabled
         self.sessionId = sessionId
         self.serverInfo = serverInfo
+        self.systemPrompt = systemPrompt
+        self.oauthClientId = oauthClientId
+        self.oauthClientSecret = oauthClientSecret
     }
 
     enum CodingKeys: String, CodingKey {
         case id, name, url, authToken, headers, isEnabled, sessionId, serverInfo
+        case systemPrompt, oauthClientId, oauthClientSecret
     }
 
     init(from decoder: Decoder) throws {
@@ -53,7 +67,39 @@ struct MCPServerConfig: Codable, Identifiable, Equatable, Sendable {
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
         sessionId = try container.decodeIfPresent(String.self, forKey: .sessionId)
         serverInfo = try container.decodeIfPresent(String.self, forKey: .serverInfo)
+        systemPrompt = try container.decodeIfPresent(String.self, forKey: .systemPrompt)
+        oauthClientId = try container.decodeIfPresent(String.self, forKey: .oauthClientId)
+        oauthClientSecret = try container.decodeIfPresent(String.self, forKey: .oauthClientSecret)
     }
+
+    /// Renders the custom headers as the editable multi-line `Key: Value` form.
+    var headersText: String {
+        headers
+            .sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+            .map { "\($0.key): \($0.value)" }
+            .joined(separator: "\n")
+    }
+
+    /// Parses `Key: Value` lines. Values may themselves contain colons
+    /// (e.g. URLs); only the first colon separates key from value.
+    static func parseHeaders(_ text: String) -> [String: String] {
+        var result: [String: String] = [:]
+        for line in text.split(separator: "\n", omittingEmptySubsequences: true) {
+            let line = line.trimmingCharacters(in: .whitespaces)
+            guard !line.isEmpty, let separator = line.firstIndex(of: ":") else { continue }
+            let key = String(line[line.startIndex..<separator]).trimmingCharacters(in: .whitespaces)
+            let value = String(line[line.index(after: separator)...]).trimmingCharacters(in: .whitespaces)
+            guard !key.isEmpty, !value.isEmpty else { continue }
+            result[key] = value
+        }
+        return result
+    }
+}
+
+/// Outcome of an ad-hoc connection test from the server editor.
+enum MCPConnectionTestResult: Sendable, Equatable {
+    case success(toolCount: Int, serverInfo: String)
+    case failure(String)
 }
 
 struct MCPTool: Identifiable {
@@ -329,6 +375,44 @@ final class MCPServerStore: ObservableObject {
 
     func isConnected(_ server: MCPServerConfig) -> Bool {
         connectedServerIds.contains(server.id)
+    }
+
+    /// Custom system prompts contributed by enabled servers, appended to the
+    /// global system prompt while those servers are enabled.
+    var enabledSystemPrompts: [String] {
+        servers.filter { $0.isEnabled }.compactMap { server in
+            let trimmed = server.systemPrompt?.trimmingCharacters(in: .whitespacesAndNewlines)
+            return (trimmed?.isEmpty == false) ? trimmed : nil
+        }
+    }
+
+    /// Ad-hoc connection test used by the server editor so users can validate a
+    /// URL, headers and token before saving.
+    func testConnection(url: String, headers: [String: String], authToken: String?) async -> MCPConnectionTestResult {
+        let trimmed = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let parsedURL = URL(string: trimmed), let scheme = parsedURL.scheme, !scheme.isEmpty else {
+            return .failure(NSLocalizedString("Enter a valid URL", comment: "Invalid URL for connection test"))
+        }
+
+        let client = MCPClient(
+            serverId: UUID(),
+            serverName: "connection-test",
+            url: parsedURL,
+            authToken: authToken ?? "",
+            additionalHeaders: headers,
+            sessionId: nil
+        )
+
+        do {
+            let info = try await client.initialize()
+            let tools = try await client.listTools()
+            let serverInfo = [info.name, info.version]
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            return .success(toolCount: tools.count, serverInfo: serverInfo)
+        } catch {
+            return .failure(error.localizedDescription)
+        }
     }
 
     /// Enables or disables a server from the list. Enabling reconnects it;

@@ -45,6 +45,18 @@ final class ConversationStore: Sendable {
             return OllamaService.shared
         }
     }
+
+    /// Combines the global system prompt with any per-server prompts from
+    /// enabled MCP servers.
+    @MainActor
+    private static func combinedSystemPrompt(_ base: String) -> String {
+        var parts: [String] = []
+        if !base.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            parts.append(base)
+        }
+        parts.append(contentsOf: MCPServerStore.shared.enabledSystemPrompts)
+        return parts.joined(separator: "\n\n")
+    }
     
     func loadConversations() async throws {
         print("loading conversations")
@@ -140,8 +152,9 @@ final class ConversationStore: Sendable {
         }
 
         /// add system prompt to very first message in the conversation
-        if !systemPrompt.isEmpty && conversation.messages.isEmpty {
-            let systemMessage = MessageSD(content: systemPrompt, role: "system")
+        let combinedSystemPrompt = Self.combinedSystemPrompt(systemPrompt)
+        if !combinedSystemPrompt.isEmpty && conversation.messages.isEmpty {
+            let systemMessage = MessageSD(content: combinedSystemPrompt, role: "system")
             systemMessage.conversation = conversation
         }
 

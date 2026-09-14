@@ -294,6 +294,19 @@ final class MCPOAuthClient: NSObject {
     // MARK: Dynamic registration (RFC 7591)
 
     private func registerIfNeeded(session: MCPOAuthSession, server: MCPServerConfig) async throws -> String {
+        // Manual override takes precedence over discovery + dynamic registration.
+        if let overrideClientID = server.oauthClientId?.trimmingCharacters(in: .whitespaces), !overrideClientID.isEmpty {
+            let secret = server.oauthClientSecret?.trimmingCharacters(in: .whitespaces)
+            if session.clientID != overrideClientID || session.clientSecret != secret {
+                var updated = session
+                updated.clientID = overrideClientID
+                updated.clientSecret = (secret?.isEmpty == false) ? secret : nil
+                MCPOAuthSessionStore.save(session: updated, serverId: server.id)
+                return overrideClientID
+            }
+            return session.clientID
+        }
+
         if !session.clientID.isEmpty {
             return session.clientID
         }

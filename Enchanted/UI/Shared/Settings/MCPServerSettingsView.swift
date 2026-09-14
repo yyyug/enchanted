@@ -16,6 +16,7 @@ struct MCPServerSettingsView: View {
     @State private var addingServer = false
     @State private var editingServer: MCPServerConfig?
     @State private var showingError = false
+    @State private var showingDebug = false
 
     /// Preset choices mirroring common agentic clients. 0 = unlimited.
     private let maxToolCallOptions: [Int] = [5, 10, 20, 50, 100, 0]
@@ -88,7 +89,14 @@ struct MCPServerSettingsView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(NSLocalizedString("Done", comment: "Done button")) { dismiss() }
                 }
-                ToolbarItem(placement: .primaryAction) {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    Button {
+                        showingDebug = true
+                    } label: {
+                        Image(systemName: "ladybug")
+                    }
+                    .accessibilityLabel(NSLocalizedString("MCP Debug", comment: "Debug button"))
+
                     Button {
                         addingServer = true
                     } label: {
@@ -96,6 +104,10 @@ struct MCPServerSettingsView: View {
                     }
                     .accessibilityLabel(NSLocalizedString("Add MCP server", comment: "Add MCP server button"))
                 }
+            }
+            .sheet(isPresented: $showingDebug) {
+                MCPDebugView()
+                    .frame(maxWidth: 700)
             }
             .sheet(isPresented: $addingServer) {
                 MCPServerEditorView(server: nil)
@@ -222,58 +234,145 @@ struct MCPServerEditorView: View {
     @State private var name: String
     @State private var url: String
     @State private var authToken: String
+    @State private var headersText: String
+    @State private var systemPrompt: String
+    @State private var oauthClientId: String
+    @State private var oauthClientSecret: String
     @State private var isEnabled: Bool
     @State private var isConnecting = false
+
+    @State private var isTesting = false
+    @State private var testResult: MCPConnectionTestResult?
 
     init(server: MCPServerConfig?) {
         self.server = server
         _name = State(initialValue: server?.name ?? "")
         _url = State(initialValue: server?.url ?? "")
         _authToken = State(initialValue: server?.authToken ?? "")
+        _headersText = State(initialValue: server?.headersText ?? "")
+        _systemPrompt = State(initialValue: server?.systemPrompt ?? "")
+        _oauthClientId = State(initialValue: server?.oauthClientId ?? "")
+        _oauthClientSecret = State(initialValue: server?.oauthClientSecret ?? "")
         _isEnabled = State(initialValue: server?.isEnabled ?? true)
+    }
+
+    private var parsedHeaders: [String: String] {
+        MCPServerConfig.parseHeaders(headersText)
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Name", text: $name)
-                    .disableAutocorrection(true)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                Section {
+                    TextField(NSLocalizedString("Name", comment: "Server name field"), text: $name)
+                        .disableAutocorrection(true)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
 
-                TextField("URL", text: $url)
-                    .disableAutocorrection(true)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    TextField(NSLocalizedString("URL", comment: "Server URL field"), text: $url)
+                        .disableAutocorrection(true)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
 #if os(iOS)
-                    .keyboardType(.URL)
-                    .autocapitalization(.none)
+                        .keyboardType(.URL)
+                        .autocapitalization(.none)
 #endif
 
-                SecureField("Bearer Token (optional)", text: $authToken)
-                    .disableAutocorrection(true)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    Toggle(NSLocalizedString("Enabled", comment: "Enable server toggle"), isOn: $isEnabled)
 
-                Toggle("Enabled", isOn: $isEnabled)
+                    Button {
+                        test()
+                    } label: {
+                        HStack(spacing: 8) {
+                            if isTesting { ProgressView() }
+                            Text(NSLocalizedString("Test Connection", comment: "Test connection button"))
+                        }
+                    }
+                    .disabled(isTesting || url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .accessibilityHint(NSLocalizedString("Checks the URL with the current headers and token", comment: "Test connection hint"))
+
+                    testResultView
+                } header: {
+                    Text(NSLocalizedString("Connection", comment: "Connection section"))
+                }
+
+                Section {
+                    TextField(
+                        NSLocalizedString("Headers (optional)", comment: "Headers field label"),
+                        text: $headersText,
+                        axis: .vertical
+                    )
+                    .disableAutocorrection(true)
+#if os(iOS)
+                    .autocapitalization(.none)
+#endif
+                    .lineLimit(3...8)
+                    .font(.system(.body, design: .monospaced))
+                    .accessibilityLabel(NSLocalizedString("Custom headers", comment: "Headers accessibility label"))
+                } header: {
+                    Text(NSLocalizedString("Headers", comment: "Headers section"))
+                } footer: {
+                    Text(NSLocalizedString("One header per line, formatted as Key: Value. Values may contain colons. Example:\nX-Api-Key: abc123\nAuthorization: Bearer xyz", comment: "Headers footer help"))
+                }
+
+                Section {
+                    SecureField(NSLocalizedString("Bearer Token (optional)", comment: "Bearer token field"), text: $authToken)
+                        .disableAutocorrection(true)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+
+                    TextField(NSLocalizedString("OAuth Client ID (optional)", comment: "OAuth client id field"), text: $oauthClientId)
+                        .disableAutocorrection(true)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+#if os(iOS)
+                        .autocapitalization(.none)
+#endif
+
+                    SecureField(NSLocalizedString("OAuth Client Secret (optional)", comment: "OAuth client secret field"), text: $oauthClientSecret)
+                        .disableAutocorrection(true)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                } header: {
+                    Text(NSLocalizedString("Authentication", comment: "Authentication section"))
+                } footer: {
+                    Text(NSLocalizedString("Leave the OAuth fields empty to register automatically. Fill them in when the server requires pre-registered client credentials. A custom Authorization header overrides the bearer token.", comment: "Authentication footer help"))
+                }
+
+                Section {
+                    TextField(
+                        NSLocalizedString("System Prompt (optional)", comment: "Per-server system prompt field"),
+                        text: $systemPrompt,
+                        axis: .vertical
+                    )
+                    .lineLimit(3...8)
+                } header: {
+                    Text(NSLocalizedString("System Prompt", comment: "System prompt section"))
+                } footer: {
+                    Text(NSLocalizedString("Appended to the global system prompt while this server is enabled.", comment: "System prompt footer help"))
+                }
 
                 if isConnecting {
-                    HStack(spacing: 8) {
-                        ProgressView()
-                        Text("Connecting...")
+                    Section {
+                        HStack(spacing: 8) {
+                            ProgressView()
+                            Text(NSLocalizedString("Connecting...", comment: "Connecting label"))
+                        }
                     }
                 }
 
                 if let lastError = store.lastError {
-                    Text(lastError)
-                        .font(.caption)
-                        .foregroundColor(.red)
+                    Section {
+                        Text(lastError)
+                            .font(.caption)
+                            .foregroundColor(.red)
+                    }
                 }
             }
-            .navigationTitle(server == nil ? "Add MCP Server" : "Edit MCP Server")
+            .navigationTitle(server == nil
+                             ? NSLocalizedString("Add MCP Server", comment: "Add server title")
+                             : NSLocalizedString("Edit MCP Server", comment: "Edit server title"))
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(NSLocalizedString("Cancel", comment: "Cancel button")) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
+                    Button(NSLocalizedString("Save", comment: "Save button")) { save() }
                         .disabled(
                             name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                             url.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -284,6 +383,50 @@ struct MCPServerEditorView: View {
         .frame(minWidth: 420)
     }
 
+    @ViewBuilder
+    private var testResultView: some View {
+        if let testResult {
+            switch testResult {
+            case .success(let toolCount, let serverInfo):
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text(serverInfo.isEmpty
+                         ? String(format: NSLocalizedString("Connected. %lld tools available.", comment: "Test success no info"), toolCount)
+                         : String(format: NSLocalizedString("Connected to %@. %lld tools available.", comment: "Test success with server info"), serverInfo, toolCount))
+                        .font(.caption)
+                }
+                .accessibilityElement(children: .combine)
+            case .failure(let message):
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                    Text(message)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+            }
+        }
+    }
+
+    private func test() {
+        isTesting = true
+        testResult = nil
+        let token = authToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        let headers = parsedHeaders
+        let urlValue = url
+        Task {
+            let result = await store.testConnection(
+                url: urlValue,
+                headers: headers,
+                authToken: token.isEmpty ? nil : token
+            )
+            testResult = result
+            isTesting = false
+        }
+    }
+
     private func save() {
         var trimmedURL = url.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedURL.last == "/" {
@@ -291,6 +434,10 @@ struct MCPServerEditorView: View {
         }
 
         let token = authToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prompt = systemPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        let clientID = oauthClientId.trimmingCharacters(in: .whitespacesAndNewlines)
+        let clientSecret = oauthClientSecret.trimmingCharacters(in: .whitespacesAndNewlines)
+
         let config: MCPServerConfig
         if let server = server {
             config = MCPServerConfig(
@@ -298,17 +445,24 @@ struct MCPServerEditorView: View {
                 name: name,
                 url: trimmedURL,
                 authToken: token.isEmpty ? nil : token,
-                headers: server.headers,
+                headers: parsedHeaders,
                 isEnabled: isEnabled,
                 sessionId: server.sessionId,
-                serverInfo: server.serverInfo
+                serverInfo: server.serverInfo,
+                systemPrompt: prompt.isEmpty ? nil : prompt,
+                oauthClientId: clientID.isEmpty ? nil : clientID,
+                oauthClientSecret: clientSecret.isEmpty ? nil : clientSecret
             )
         } else {
             config = MCPServerConfig(
                 name: name,
                 url: trimmedURL,
                 authToken: token.isEmpty ? nil : token,
-                isEnabled: isEnabled
+                headers: parsedHeaders,
+                isEnabled: isEnabled,
+                systemPrompt: prompt.isEmpty ? nil : prompt,
+                oauthClientId: clientID.isEmpty ? nil : clientID,
+                oauthClientSecret: clientSecret.isEmpty ? nil : clientSecret
             )
         }
 
