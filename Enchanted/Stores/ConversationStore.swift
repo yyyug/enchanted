@@ -151,7 +151,7 @@ final class ConversationStore: Sendable {
         messages.removeAll { $0.id == message.id }
         let conversation = selectedConversation
         Task(priority: .background) {
-            try? self.swiftDataService.deleteMessage(message)
+            try? await self.swiftDataService.deleteMessage(message)
             if let conversation {
                 try? await self.reloadConversation(conversation)
                 try? await self.loadConversations()
