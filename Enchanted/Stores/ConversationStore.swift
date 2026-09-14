@@ -121,7 +121,7 @@ final class ConversationStore: Sendable {
     func selectConversation(_ conversation: ConversationSD) async throws {
         // Leaving a conversation tears down its MCP connections; the next send
         // reactivates whatever that conversation has selected.
-        MCPServerStore.shared.deactivateAll()
+        await MCPServerStore.shared.deactivateAll()
         try await reloadConversation(conversation)
     }
     
