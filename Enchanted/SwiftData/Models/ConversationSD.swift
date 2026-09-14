@@ -21,7 +21,16 @@ final class ConversationSD: Identifiable {
 
     @Relationship(deleteRule: .cascade, inverse: \MessageSD.conversation)
     var messages: [MessageSD] = []
-    
+
+    /// MCP servers explicitly selected for this conversation.
+    @Relationship(deleteRule: .cascade, inverse: \ConversationMCPServer.conversation)
+    var mcpServers: [ConversationMCPServer] = []
+
+    /// `false` until the user (or the migration default policy) has set the MCP
+    /// selection for this conversation. Distinguishes "chose none" from
+    /// "never configured".
+    var mcpSelectionInitialized: Bool = false
+
     init(name: String, updatedAt: Date = Date.now) {
         self.name = name
         self.updatedAt = updatedAt

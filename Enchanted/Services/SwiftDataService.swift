@@ -21,6 +21,7 @@ final actor SwiftDataService: ModelActor {
                 LanguageModelSD.self,
                 ConversationSD.self,
                 MessageSD.self,
+                ConversationMCPServer.self,
                 CompletionInstructionSD.self
             ])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
@@ -135,6 +136,71 @@ extension SwiftDataService {
     func createMessage(_ mesasge: MessageSD) throws {
         self.modelContext.insert(mesasge)
         try modelContext.saveChanges()
+    }
+}
+
+// MARK: - Conversation MCP servers
+extension SwiftDataService {
+    func selectedServerIDs(forConversation conversationID: UUID) throws -> [UUID] {
+        let predicate = #Predicate<ConversationMCPServer> { $0.conversation?.id == conversationID }
+        let descriptor = FetchDescriptor<ConversationMCPServer>(predicate: predicate)
+        return try modelContext.fetch(descriptor)
+            .sorted { $0.addedAt < $1.addedAt }
+            .map(\.serverID)
+    }
+
+    /// Replaces this conversation's MCP selection, preserving the session id of
+    /// servers that stay selected. Marks the selection as user-initialized.
+    func setSelectedServerIDs(_ serverIDs: [UUID], forConversation conversation: ConversationSD) throws {
+        let existing = conversation.mcpServers
+        var sessionByServer: [UUID: String] = [:]
+        for row in existing {
+            if let session = row.sessionID {
+                sessionByServer[row.serverID] = session
+            }
+        }
+
+        for row in existing {
+            modelContext.delete(row)
+        }
+
+        // Preserve the original order, ignoring duplicates.
+        var seen = Set<UUID>()
+        for serverID in serverIDs where seen.insert(serverID).inserted {
+            let row = ConversationMCPServer(serverID: serverID, conversation: conversation)
+            row.sessionID = sessionByServer[serverID]
+            modelContext.insert(row)
+        }
+
+        conversation.mcpSelectionInitialized = true
+        try modelContext.saveChanges()
+    }
+
+    func sessionID(forServerID serverID: UUID, conversationID: UUID) throws -> String? {
+        try conversationMCPServer(serverID: serverID, conversationID: conversationID)?.sessionID
+    }
+
+    func setSessionID(_ sessionID: String?, forServerID serverID: UUID, conversationID: UUID) throws {
+        guard let row = try conversationMCPServer(serverID: serverID, conversationID: conversationID) else { return }
+        row.sessionID = sessionID
+        try modelContext.saveChanges()
+    }
+
+    /// Removes a server from every conversation (used when a config is deleted).
+    func removeServerAssociations(serverID: UUID) throws {
+        let predicate = #Predicate<ConversationMCPServer> { $0.serverID == serverID }
+        let rows = try modelContext.fetch(FetchDescriptor<ConversationMCPServer>(predicate: predicate))
+        for row in rows {
+            modelContext.delete(row)
+        }
+        try modelContext.saveChanges()
+    }
+
+    private func conversationMCPServer(serverID: UUID, conversationID: UUID) throws -> ConversationMCPServer? {
+        let predicate = #Predicate<ConversationMCPServer> {
+            $0.serverID == serverID && $0.conversation?.id == conversationID
+        }
+        return try modelContext.fetch(FetchDescriptor<ConversationMCPServer>(predicate: predicate)).first
     }
 }
 

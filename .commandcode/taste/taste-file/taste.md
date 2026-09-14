@@ -12,7 +12,8 @@
 - Prefers toggle controls to appear before related selectors/pickers in settings UI (e.g., enable toggle before voice picker). Confidence: 0.5
 - Values comprehensive accessibility in SwiftUI apps, including accessibility labels on all buttons, Dynamic Type support, Reduce Motion checks, adaptive colors, and header traits. Confidence: 0.7
 - Expects accessibility labels to reflect control state (e.g., toggling "Voice" to "Stop" while recording), decorative images to be hidden from screen readers, and interactive controls to meet adequate touch-target sizes. Confidence: 0.6
-- Values following industry best practices in iOS/SwiftUI development beyond just accessibility. Confidence: 0.6
+- Values following industry best practices in iOS/SwiftUI development beyond just accessibility. Confidence: 0.7
+- Prefers implementations designed for correctness and industry best practices upfront to avoid future refactoring (do it right once rather than iterate then refactor). Confidence: 0.7
 - Prefers commit messages without a Co-authored-by attribution trailer. Confidence: 0.9
 - Prefers building and shipping iOS apps as unsigned IPAs via GitHub Actions and downloading the resulting artifact, rather than building locally; also looks for CI build speedups like caching. Confidence: 0.8
 - Verifies that changes are actually present in the pushed code/build artifact before shipping, asking to confirm edits landed. Confidence: 0.6
@@ -34,3 +35,8 @@
 - Communicates in Cantonese (Traditional Chinese) mixed with English technical terms, and expects the conversation and explanations in the same language. Confidence: 0.7
 - When given a prioritized list of gaps, approves implementing selected items while asking for a detailed explanation of the remaining ones before deciding on them. Confidence: 0.6
 - Wants explanations of proposed features backed by concrete usage examples and step-by-step configuration/setup instructions, not just abstract reasoning about why it matters. Confidence: 0.55
+- Wants work that is not being done now recorded in a markdown backlog/document in the project (with implementation plans) so it can be picked up later, rather than silently omitted. Confidence: 0.7
+- Expects newly added settings/fields to actually be wired up and functional end-to-end, not merely present in the UI. Confidence: 0.6
+- Before deciding on a change to an existing design, wants the current behavior and its concrete side effects spelled out first (e.g. token cost, cross-conversation state pollution, global vs local scope) — often by asking "what happens today?". Confidence: 0.55
+- When offered several candidate implementation options (e.g. a minimal interim fix vs the full solution), wants their relationship clarified — whether the larger one subsumes the smaller — so redundant work can be skipped rather than done incrementally. Confidence: 0.55
+- Wants the default state/behavior of newly created objects spelled out before committing to a design (e.g. whether a new conversation starts with the feature enabled or is opt-in). Confidence: 0.5

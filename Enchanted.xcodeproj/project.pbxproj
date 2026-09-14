@@ -23,6 +23,7 @@
 		FF10024A2B25BE740011A4DC /* LanguageModelSD.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1002492B25BE740011A4DC /* LanguageModelSD.swift */; };
 		FF10024C2B25BEA00011A4DC /* MessageSD.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF10024B2B25BEA00011A4DC /* MessageSD.swift */; };
 		FF10024E2B25C2A70011A4DC /* ConversationSD.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF10024D2B25C2A70011A4DC /* ConversationSD.swift */; };
+		EE00000000000000000000F8 /* ConversationMCPServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000F7 /* ConversationMCPServer.swift */; };
 		FF1002502B25C79F0011A4DC /* SwiftDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF10024F2B25C79F0011A4DC /* SwiftDataService.swift */; };
 		FF1002522B2609980011A4DC /* ModelContext+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1002512B2609970011A4DC /* ModelContext+Extension.swift */; };
 		FF1002542B261D460011A4DC /* MessageListVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1002532B261D460011A4DC /* MessageListVIew.swift */; };
@@ -130,6 +131,7 @@
 		FF1002492B25BE740011A4DC /* LanguageModelSD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageModelSD.swift; sourceTree = "<group>"; };
 		FF10024B2B25BEA00011A4DC /* MessageSD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageSD.swift; sourceTree = "<group>"; };
 		FF10024D2B25C2A70011A4DC /* ConversationSD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationSD.swift; sourceTree = "<group>"; };
+		EE00000000000000000000F7 /* ConversationMCPServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationMCPServer.swift; sourceTree = "<group>"; };
 		FF10024F2B25C79F0011A4DC /* SwiftDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataService.swift; sourceTree = "<group>"; };
 		FF1002512B2609970011A4DC /* ModelContext+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ModelContext+Extension.swift"; sourceTree = "<group>"; };
 		FF1002532B261D460011A4DC /* MessageListVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageListVIew.swift; sourceTree = "<group>"; };
@@ -285,6 +287,7 @@
 			children = (
 				FF6D82162B9122F9001183A8 /* CompletionInstructionSD.swift */,
 				FF10024D2B25C2A70011A4DC /* ConversationSD.swift */,
+				EE00000000000000000000F7 /* ConversationMCPServer.swift */,
 				FF1002492B25BE740011A4DC /* LanguageModelSD.swift */,
 				FF10024B2B25BEA00011A4DC /* MessageSD.swift */,
 			);
@@ -775,6 +778,7 @@
 				FFD57E322BF291B2003FEFF1 /* CodeBlockView.swift in Sources */,
 				FF1002542B261D460011A4DC /* MessageListVIew.swift in Sources */,
 				FF10024E2B25C2A70011A4DC /* ConversationSD.swift in Sources */,
+				EE00000000000000000000F8 /* ConversationMCPServer.swift in Sources */,
 				FF9C920C2BF0C088004C8275 /* OptionsMenuView.swift in Sources */,
 				FF9C920A2BF0B7B1004C8275 /* LanguageModel.swift in Sources */,
 				FFEC32912B24779A003E5C04 /* EnchantedApp.swift in Sources */,

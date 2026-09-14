@@ -338,6 +338,9 @@ final class MCPServerStore: ObservableObject {
     static let defaultMaxToolCalls = 12
     /// `UserDefaults` key for the max tool calls setting. 0 means unlimited.
     static let maxToolCallsKey = "maxToolCalls"
+    /// `UserDefaults` keys for the "servers used by new conversations" default.
+    static let defaultServerIDsKey = "mcpDefaultServerIds"
+    static let defaultServerIDsConfiguredKey = "mcpDefaultServersConfigured"
 
     private let storageKey = "mcpServers"
     private var clients: [UUID: MCPClient] = [:]
@@ -375,6 +378,37 @@ final class MCPServerStore: ObservableObject {
 
     func isConnected(_ server: MCPServerConfig) -> Bool {
         connectedServerIds.contains(server.id)
+    }
+
+    // MARK: - New-conversation default set
+
+    /// Servers a brand-new conversation starts with.
+    var defaultServerIDs: [UUID] {
+        get {
+            let stored = UserDefaults.standard.stringArray(forKey: Self.defaultServerIDsKey) ?? []
+            return stored.compactMap(UUID.init(uuidString:))
+        }
+        set {
+            UserDefaults.standard.set(newValue.map(\.uuidString), forKey: Self.defaultServerIDsKey)
+        }
+    }
+
+    /// Whether the user has ever chosen a default set. Distinguishes an
+    /// explicit "none" from "never configured".
+    var defaultServerIDsConfigured: Bool {
+        get { UserDefaults.standard.bool(forKey: Self.defaultServerIDsConfiguredKey) }
+        set { UserDefaults.standard.set(newValue, forKey: Self.defaultServerIDsConfiguredKey) }
+    }
+
+    /// Selection used for a conversation that has never been configured.
+    /// Explicit default set wins; otherwise fall back to every enabled server so
+    /// existing behaviour is preserved after upgrading.
+    func defaultSelectionForNewConversation() -> [UUID] {
+        let existing = Set(servers.map(\.id))
+        if defaultServerIDsConfigured {
+            return defaultServerIDs.filter { existing.contains($0) }
+        }
+        return servers.filter(\.isEnabled).map(\.id)
     }
 
     /// Custom system prompts contributed by enabled servers, appended to the
@@ -893,6 +927,15 @@ final class MCPServerStore: ObservableObject {
         servers.removeAll { $0.id == server.id }
         save()
         rebuildTools()
+
+        // Drop the server from conversation selections and the default set so no
+        // dangling references survive.
+        if defaultServerIDs.contains(server.id) {
+            defaultServerIDs = defaultServerIDs.filter { $0 != server.id }
+        }
+        Task {
+            try? await SwiftDataService.shared.removeServerAssociations(serverID: server.id)
+        }
     }
 
     private func updateSession(for server: MCPServerConfig, sessionId: String?, serverInfo: String?) {
