@@ -33,6 +33,7 @@ struct ChatView: View {
     /// Image selection
     @State private var pickerSelectorActive: PhotosPickerItem?
     @State private var selectedImage: Image?
+    @State private var showCamera = false
     
     init(
         conversation: ConversationSD? = nil,
@@ -154,14 +155,43 @@ struct ChatView: View {
 
             Spacer()
 
-            Button(action: onNewConversationTap) {
-                Image(systemName: "square.and.pencil")
-                    .renderingMode(.template)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 24, height: 24)
-                    .foregroundColor(Color(.label))
+            HStack(spacing: 16) {
+                if !conversationMarkdown.isEmpty {
+                    ShareLink(item: conversationMarkdown) {
+                        Image(systemName: "square.and.arrow.up")
+                            .renderingMode(.template)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                            .foregroundColor(Color(.label))
+                    }
+                    .accessibilityLabel(NSLocalizedString("Share conversation", comment: "Share conversation button"))
+                }
+
+                Button(action: onNewConversationTap) {
+                    Image(systemName: "square.and.pencil")
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(Color(.label))
+                }
+                .accessibilityLabel(NSLocalizedString("New Conversation", comment: "New conversation button"))
+                .accessibilitySortPriority(0)
             }
+        }
+    }
+
+    /// Markdown rendering of the conversation, used by the share sheet.
+    private var conversationMarkdown: String {
+        messages
+            .filter { $0.role == "user" || $0.role == "assistant" }
+            .map { message in
+                let speaker = message.role == "user" ? "User" : "Assistant"
+                return "**\(speaker)**\n\n\(message.content)"
+            }
+            .joined(separator: "\n\n---\n\n")
+    }
             .frame(width: 44, height: 44)
             .contentShape(Rectangle())
             .accessibilityLabel(NSLocalizedString("New Conversation", comment: "New conversation button"))
@@ -190,6 +220,19 @@ struct ChatView: View {
             }
             .showIf(selectedModel?.supportsImages ?? false)
             .accessibilityLabel(NSLocalizedString("Attach", comment: "Attach image button"))
+
+            if (selectedModel?.supportsImages ?? false), UIImagePickerController.isSourceTypeAvailable(.camera) {
+                Button {
+                    showCamera = true
+                } label: {
+                    Image(systemName: "camera")
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundStyle(.foreground)
+                        .frame(width: 24, height: 24)
+                }
+                .accessibilityLabel(NSLocalizedString("Take Photo", comment: "Camera capture button"))
+            }
 
 
             HStack(spacing: 4) {
@@ -276,6 +319,53 @@ struct ChatView: View {
         }
         .accessibilityAction(.magicTap) {
             handleMagicTap()
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            CameraPicker { image in
+                selectedImage = image
+            }
+            .ignoresSafeArea()
+        }
+    }
+}
+
+/// Minimal camera capture wrapper. Only presented when a camera is available.
+struct CameraPicker: UIViewControllerRepresentable {
+    @Environment(\.dismiss) private var dismiss
+    var onImage: (Image) -> Void
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    final class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+        private let parent: CameraPicker
+
+        init(_ parent: CameraPicker) {
+            self.parent = parent
+        }
+
+        func imagePickerController(
+            _ picker: UIImagePickerController,
+            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
+        ) {
+            if let uiImage = info[.originalImage] as? UIImage {
+                parent.onImage(Image(uiImage: uiImage))
+            }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
         }
     }
 }

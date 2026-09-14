@@ -179,3 +179,48 @@
 /* VoiceOver */
 "Listening" = "正在聆聽";
 "Sending message" = "正在傳送訊息";
+
+/* MCP Server Editor */
+"Name" = "名稱";
+"URL" = "網址";
+"Enabled" = "已啟用";
+"Test Connection" = "測試連線";
+"Checks the URL with the current headers and token" = "使用目前的 headers 與權杖檢查網址";
+"Connection" = "連線";
+"Headers (optional)" = "Headers（選填）";
+"Custom headers" = "自訂 headers";
+"Headers" = "Headers";
+"One header per line, formatted as Key: Value. Values may contain colons. Example:\nX-Api-Key: abc123\nAuthorization: Bearer xyz" = "每行一個 header，格式為 Key: Value。值可包含冒號。例如：\nX-Api-Key: abc123\nAuthorization: Bearer xyz";
+"Authentication" = "認證";
+"OAuth Client ID (optional)" = "OAuth Client ID（選填）";
+"OAuth Client Secret (optional)" = "OAuth Client Secret（選填）";
+"Leave the OAuth fields empty to register automatically. Fill them in when the server requires pre-registered client credentials. A custom Authorization header overrides the bearer token." = "留空 OAuth 欄位會自動註冊；若伺服器需要預先註冊的用戶端憑證請填寫。自訂的 Authorization header 會覆蓋 bearer token。";
+"System Prompt (optional)" = "系統提示（選填）";
+"Appended to the global system prompt while this server is enabled." = "此伺服器啟用時，會附加到全域系統提示之後。";
+"Connecting..." = "連線中...";
+"Edit MCP Server" = "編輯 MCP 伺服器";
+"Enter a valid URL" = "請輸入有效的網址";
+"Connected. %lld tools available." = "已連線。有 %lld 個工具可用。";
+"Connected to %@. %lld tools available." = "已連線至 %@。有 %lld 個工具可用。";
+
+/* MCP Debug */
+"MCP Debug" = "MCP 偵錯";
+"Reconnect" = "重新連線";
+"Session" = "工作階段";
+"Server" = "伺服器";
+"Tools" = "工具";
+"No tools discovered." = "未發現任何工具。";
+"Tool Schemas" = "工具結構描述";
+"No description" = "沒有描述";
+"No MCP servers configured." = "尚未設定任何 MCP 伺服器。";
+"Yes" = "是";
+"No" = "否";
+
+/* Chat actions */
+"Regenerate" = "重新生成";
+"Delete Message" = "刪除訊息";
+"Search conversations" = "搜尋對話";
+"Clear search" = "清除搜尋";
+"No conversations found" = "找不到對話";
+"Share conversation" = "分享對話";
+"Take Photo" = "拍照";

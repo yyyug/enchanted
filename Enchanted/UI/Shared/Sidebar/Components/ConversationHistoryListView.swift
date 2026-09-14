@@ -27,7 +27,21 @@ struct ConversationHistoryList: View {
     var onTap: (_ conversation: ConversationSD) -> ()
     var onDelete: (_ conversation: ConversationSD) -> ()
     var onDeleteDailyConversations: (_ date: Date) -> ()
-    
+
+    @State private var searchText = ""
+
+    /// Filters by conversation title and by message content.
+    private var filteredConversations: [ConversationSD] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return conversations }
+        return conversations.filter { conversation in
+            if conversation.name.localizedCaseInsensitiveContains(query) {
+                return true
+            }
+            return conversation.messages.contains { $0.content.localizedCaseInsensitiveContains(query) }
+        }
+    }
+
     func groupConversationsByDay(conversations: [ConversationSD]) -> [ConversationGroup] {
         let groupedDictionary = Dictionary(grouping: conversations) { (conversation) -> Date in
             return Calendar.current.startOfDay(for: conversation.updatedAt)
@@ -39,11 +53,48 @@ struct ConversationHistoryList: View {
     }
     
     var conversationGroups: [ConversationGroup] {
-        groupConversationsByDay(conversations: conversations)
+        groupConversationsByDay(conversations: filteredConversations)
+    }
+    
+    private var searchField: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+                .accessibilityHidden(true)
+            TextField(NSLocalizedString("Search conversations", comment: "Conversation search field"), text: $searchText)
+                .textFieldStyle(.plain)
+                .disableAutocorrection(true)
+#if os(iOS)
+                .autocapitalization(.none)
+                .submitLabel(.search)
+#endif
+                .accessibilityLabel(NSLocalizedString("Search conversations", comment: "Conversation search field"))
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(NSLocalizedString("Clear search", comment: "Clear search button"))
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 17) {
+            searchField
+
+            if filteredConversations.isEmpty && !searchText.isEmpty {
+                Text(NSLocalizedString("No conversations found", comment: "Empty search result"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
             ForEach(conversationGroups, id:\.self) { conversationGroup in
                 
                 HStack {

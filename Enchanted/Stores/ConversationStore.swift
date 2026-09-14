@@ -9,6 +9,9 @@ import Foundation
 import SwiftData
 import Combine
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 @Observable
 final class ConversationStore: Sendable {
@@ -56,6 +59,14 @@ final class ConversationStore: Sendable {
         }
         parts.append(contentsOf: MCPServerStore.shared.enabledSystemPrompts)
         return parts.joined(separator: "\n\n")
+    }
+
+    /// Keeps the screen awake while a response is being generated.
+    @MainActor
+    private func setIdleTimerDisabled(_ disabled: Bool) {
+        #if os(iOS)
+        UIApplication.shared.isIdleTimerDisabled = disabled
+        #endif
     }
     
     func loadConversations() async throws {
@@ -128,9 +139,38 @@ final class ConversationStore: Sendable {
             await MCPServerStore.shared.cancelToolExecution()
         }
         handleComplete()
+        setIdleTimerDisabled(false)
         withAnimation {
             conversationState = .completed
         }
+    }
+
+    /// Removes a single message from the conversation (and storage).
+    @MainActor
+    func deleteMessage(_ message: MessageSD) {
+        messages.removeAll { $0.id == message.id }
+        let conversation = selectedConversation
+        Task(priority: .background) {
+            try? self.swiftDataService.deleteMessage(message)
+            if let conversation {
+                try? await self.reloadConversation(conversation)
+                try? await self.loadConversations()
+            }
+        }
+    }
+
+    /// Re-runs the last user prompt, replacing the previous assistant reply.
+    @MainActor
+    func regenerateResponse(model: LanguageModelSD, systemPrompt: String) {
+        guard let lastUser = messages.last(where: { $0.role == "user" }) else { return }
+        let image = lastUser.image.flatMap { Image(data: $0) }
+        sendPrompt(
+            userPrompt: lastUser.content,
+            model: model,
+            image: image,
+            systemPrompt: systemPrompt,
+            trimmingMessageId: lastUser.id.uuidString
+        )
     }
     
     @MainActor
@@ -182,7 +222,8 @@ final class ConversationStore: Sendable {
         let assistantMessage = MessageSD(content: "", role: "assistant")
         assistantMessage.conversation = conversation
 
-conversationState = .loading()
+        conversationState = .loading()
+        setIdleTimerDisabled(true)
 
         let service = getService(for: model.modelProvider)
         let chatRequest = ChatRequest(model: model.name, messages: messageHistory, temperature: 0)
@@ -264,6 +305,7 @@ conversationState = .loading()
         withAnimation {
             conversationState = .error(message: errorMessage)
         }
+        setIdleTimerDisabled(false)
     }
     
     @MainActor
@@ -280,6 +322,7 @@ conversationState = .loading()
         withAnimation {
             conversationState = .completed
         }
+        setIdleTimerDisabled(false)
     }
 
     // MARK: - MCP Agentic Loop

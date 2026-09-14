@@ -18,9 +18,24 @@ struct MessageListView: View {
     @Binding var editMessage: MessageSD?
     @State private var messageSelected: MessageSD?
     @StateObject private var speechSynthesizer = SpeechSynthesizer.shared
+    @State private var conversationStore = ConversationStore.shared
 
     private var autoSpeak: Bool {
         UserDefaults.standard.bool(forKey: "autoSpeak")
+    }
+
+    private var systemPrompt: String {
+        UserDefaults.standard.string(forKey: "systemPrompt") ?? ""
+    }
+
+    /// Re-runs the prompt that produced this assistant reply.
+    private func regenerate(_ message: MessageSD) {
+        guard let model = conversationStore.selectedConversation?.model else { return }
+        conversationStore.regenerateResponse(model: model, systemPrompt: systemPrompt)
+    }
+
+    private func delete(_ message: MessageSD) {
+        conversationStore.deleteMessage(message)
     }
     
     func onEditMessageTap() -> (MessageSD) -> Void {
@@ -70,6 +85,16 @@ struct MessageListView: View {
                                     }) {
                                         Label("Edit", systemImage: "pencil")
                                     }
+                                }
+                                
+                                if message.role == "assistant" {
+                                    Button(action: { regenerate(message) }) {
+                                        Label(NSLocalizedString("Regenerate", comment: "Regenerate reply action"), systemImage: "arrow.clockwise")
+                                    }
+                                }
+                                
+                                Button(role: .destructive, action: { delete(message) }) {
+                                    Label(NSLocalizedString("Delete Message", comment: "Delete message action"), systemImage: "trash")
                                 }
                                 
                                 if editMessage?.id == message.id {
