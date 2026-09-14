@@ -175,6 +175,35 @@ final class ConversationStore: Sendable {
             trimmingMessageId: lastUser.id.uuidString
         )
     }
+
+    /// Applies an explicit MCP server selection to a conversation and
+    /// immediately re-scopes the live connections to it.
+    @MainActor
+    func setSelectedServers(
+        _ serverIDs: [UUID],
+        for conversation: ConversationSD,
+        makeDefault: Bool
+    ) async {
+        let store = MCPServerStore.shared
+
+        try? await swiftDataService.setSelectedServerIDs(serverIDs, forConversation: conversation)
+
+        if makeDefault {
+            store.defaultServerIDs = serverIDs
+            store.defaultServerIDsConfigured = true
+        }
+
+        // Re-scope the live tool catalog to this conversation's selection.
+        store.deactivateAll()
+        guard !serverIDs.isEmpty else { return }
+
+        let sessions = (try? await swiftDataService.sessionMap(forConversation: conversation.id)) ?? [:]
+        await store.activate(serverIDs: Set(serverIDs), sessions: sessions)
+        try? await swiftDataService.persistSessions(
+            store.currentSessionIDs,
+            forConversation: conversation.id
+        )
+    }
     
     @MainActor
     func sendPrompt(userPrompt: String, model: LanguageModelSD, image: Image? = nil, systemPrompt: String = "", trimmingMessageId: String? = nil) {

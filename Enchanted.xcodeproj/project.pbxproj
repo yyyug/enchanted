@@ -113,6 +113,7 @@
 		EE00000000000000000000F2 /* MCPSamplingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000F1 /* MCPSamplingView.swift */; };
 		EE00000000000000000000F4 /* MCPElicitationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000F3 /* MCPElicitationView.swift */; };
 		EE00000000000000000000F6 /* MCPDebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000F5 /* MCPDebugView.swift */; };
+		EE00000000000000000000FA /* MCPConversationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000F9 /* MCPConversationPickerView.swift */; };
 		EE00000000000000000000C1 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = EE00000000000000000000A1 /* Localizable.strings */; };
 /* End PBXBuildFile section */
 
@@ -222,6 +223,7 @@
 		EE00000000000000000000F1 /* MCPSamplingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPSamplingView.swift; sourceTree = "<group>"; };
 		EE00000000000000000000F3 /* MCPElicitationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPElicitationView.swift; sourceTree = "<group>"; };
 		EE00000000000000000000F5 /* MCPDebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPDebugView.swift; sourceTree = "<group>"; };
+		EE00000000000000000000F9 /* MCPConversationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPConversationPickerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -320,6 +322,7 @@
 				FF10026C2B2751760011A4DC /* SettingsView.swift */,
 				EE00000000000000000000D5 /* MCPServerSettingsView.swift */,
 				EE00000000000000000000F5 /* MCPDebugView.swift */,
+				EE00000000000000000000F9 /* MCPConversationPickerView.swift */,
 				FF0146CA2B3DA1DF00A2A9F6 /* Settings.swift */,
 			);
 			path = Settings;
@@ -800,6 +803,7 @@
 				EE00000000000000000000F2 /* MCPSamplingView.swift in Sources */,
 				EE00000000000000000000F4 /* MCPElicitationView.swift in Sources */,
 				EE00000000000000000000F6 /* MCPDebugView.swift in Sources */,
+				EE00000000000000000000FA /* MCPConversationPickerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

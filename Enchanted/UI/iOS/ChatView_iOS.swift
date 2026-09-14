@@ -34,6 +34,10 @@ struct ChatView: View {
     @State private var pickerSelectorActive: PhotosPickerItem?
     @State private var selectedImage: Image?
     @State private var showCamera = false
+
+    /// Per-conversation MCP server selection
+    @ObservedObject private var mcpStore = MCPServerStore.shared
+    @State private var showMCPPicker = false
     
     init(
         conversation: ConversationSD? = nil,
@@ -154,6 +158,28 @@ struct ChatView: View {
             .accessibilitySortPriority(1)
 
             Spacer()
+
+            if conversation != nil {
+                Button {
+                    showMCPPicker = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "wrench.and.screwdriver")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                        Text("\(mcpStore.availableTools.count)")
+                            .font(.caption)
+                    }
+                    .foregroundColor(Color(.label))
+                }
+                .accessibilityLabel(NSLocalizedString("MCP tools", comment: "MCP tools chip label"))
+                .accessibilityValue(String.localizedStringWithFormat(
+                    NSLocalizedString("%lld tools", comment: "Tool count"),
+                    mcpStore.availableTools.count
+                ))
+                .accessibilityHint(NSLocalizedString("Double tap to choose which servers this conversation uses", comment: "MCP tools chip hint"))
+            }
 
             HStack(spacing: 16) {
                 if !conversationMarkdown.isEmpty {
@@ -319,6 +345,11 @@ struct ChatView: View {
                 selectedImage = image
             }
             .ignoresSafeArea()
+        }
+        .sheet(isPresented: $showMCPPicker) {
+            if let conversation {
+                MCPConversationPickerView(conversation: conversation)
+            }
         }
     }
 }

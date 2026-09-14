@@ -225,3 +225,17 @@
 "No conversations found" = "找不到對話";
 "Share conversation" = "分享對話";
 "Take Photo" = "拍照";
+
+/* Per-conversation MCP */
+"MCP tools" = "MCP 工具";
+"Tools" = "工具";
+"Servers for this conversation" = "此對話使用的伺服器";
+"Only the selected servers' tools are offered to the model in this conversation." = "只有已選取伺服器的工具會在此對話中提供給模型。";
+"Use as default for new conversations" = "設為新對話的預設";
+"New conversations start with the default set until you change them individually." = "除非個別更改，新對話會沿用預設組合。";
+"New Conversation Default" = "新對話預設";
+"Custom default" = "自訂預設";
+"New conversations start with the servers you select below." = "新對話會使用您在下方選取的伺服器。";
+"New conversations start with every enabled server." = "新對話會使用所有已啟用的伺服器。";
+"Default servers" = "預設伺服器";
+"Double tap to choose which servers this conversation uses" = "點兩下以選擇此對話使用的伺服器";

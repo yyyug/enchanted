@@ -63,6 +63,11 @@ struct MCPServerSettingsView: View {
                                 .tag(value)
                         }
                     }
+                    NavigationLink {
+                        MCPDefaultServersView()
+                    } label: {
+                        Label(NSLocalizedString("New Conversation Default", comment: "Default set title"), systemImage: "wand.and.stars")
+                    }
                 } header: {
                     Text(NSLocalizedString("Tool Execution", comment: "Tool execution section header"))
                 } footer: {
