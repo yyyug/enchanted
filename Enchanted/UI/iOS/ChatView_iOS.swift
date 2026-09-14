@@ -8,6 +8,7 @@
 #if os(iOS)
 import SwiftUI
 import PhotosUI
+import UIKit
 
 struct ChatView: View {
     var conversation: ConversationSD?
@@ -82,6 +83,47 @@ struct ChatView: View {
                 message = ""
             }
         }
+    }
+
+    /// VoiceOver "Magic Tap" (two-finger double tap).
+    ///
+    /// While idle it starts voice input immediately; while recording it stops
+    /// and sends. This lets a VoiceOver user dictate and send a message with
+    /// two gestures instead of locating the voice, stop and send buttons.
+    private func handleMagicTap() {
+        if isRecording {
+            let transcript = speechRecognizer.transcript
+            speechRecognizer.stopTranscribing()
+            if !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                message = transcript
+            }
+            isRecording = false
+            Haptics.shared.mediumTap()
+            onMessageSubmit()
+            announce(NSLocalizedString("Sending message", comment: "VoiceOver announcement when sending"))
+        } else {
+            startVoiceInput()
+        }
+    }
+
+    private func startVoiceInput() {
+        Task {
+            await speechRecognizer.userInit()
+            // The magic tap gives explicit start/stop control, so silence
+            // auto-stop is disabled for these sessions.
+            speechRecognizer.onAutoStop = nil
+            speechRecognizer.resetTranscript()
+            speechRecognizer.startTranscribing(onUpdate: { transcription in
+                self.message = transcription
+            })
+            isRecording = true
+            Haptics.shared.mediumTap()
+            announce(NSLocalizedString("Listening", comment: "VoiceOver announcement when listening"))
+        }
+    }
+
+    private func announce(_ text: String) {
+        UIAccessibility.post(notification: .announcement, argument: text)
     }
     
     var header: some View {
@@ -231,6 +273,9 @@ struct ChatView: View {
                 message = newMessage.content
                 isFocusedInput = true
             }
+        }
+        .accessibilityAction(.magicTap) {
+            handleMagicTap()
         }
     }
 }

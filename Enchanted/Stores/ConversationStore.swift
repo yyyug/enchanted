@@ -281,7 +281,13 @@ conversationState = .loading()
     ) async {
         var workingMessages = initialMessages
         var finalContent = ""
-        let maxIterations = 12
+
+        // User-configurable cap on tool-calling rounds per message.
+        // 0 (or a missing value) means unlimited.
+        let configuredMaxToolCalls = (UserDefaults.standard.object(forKey: MCPServerStore.maxToolCallsKey) as? Int)
+            ?? MCPServerStore.defaultMaxToolCalls
+        let isUnlimited = configuredMaxToolCalls <= 0
+        let maxIterations = isUnlimited ? Int.max : configuredMaxToolCalls
         var iteration = 0
 
         while iteration < maxIterations {
@@ -356,7 +362,7 @@ conversationState = .loading()
             }
         }
 
-        if iteration >= maxIterations && finalContent.isEmpty {
+        if !isUnlimited && iteration >= maxIterations && finalContent.isEmpty {
             finalContent = "Reached the maximum number of tool calls (\(maxIterations))."
         }
 

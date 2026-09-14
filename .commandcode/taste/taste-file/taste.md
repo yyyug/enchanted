@@ -19,3 +19,11 @@
 - Wants app UIs to localize automatically based on device language, including Chinese Traditional/Simplified and regional variants (Hong Kong, Taiwan, Macau, China), and prefers a language-override option in settings. Confidence: 0.7
 - Prefers user-facing error/status feedback in the UI rather than silent failures (e.g., surface LLM errors in the chat). Confidence: 0.6
 - Wants search/filter capability on long selectable lists (e.g., a search field on the model selector). Confidence: 0.6
+- Wants the speech-recognition (ASR/voice-input) language to be user-selectable independently of the device/UI language, since a user's preferred language often differs from the language they actually speak (e.g., Traditional Chinese UI while speaking Cantonese). Confidence: 0.7
+- Offers concrete real-world usage scenarios (e.g., UI in zh-TW but speaking Cantonese) to justify features when requesting them. Confidence: 0.5
+- Expects complete localization coverage — all user-facing strings translated, not just some; asks for audits of remaining untranslated strings. Confidence: 0.6
+- Prefers CI/build status to be checked on demand rather than blocking on long waits; will interrupt long sleeps and ask to check whether the build already finished. Confidence: 0.6
+- When cloning external reference repositories for study, wants them placed in a separate folder and excluded from git (commit/push) via .gitignore. Confidence: 0.7
+- Evaluates feature gaps by comparing against a reference open-source app of the same domain and asking for a prioritized list of missing features. Confidence: 0.6
+- Often wants analysis and comparison only first, with no file changes, and gives an explicit go-ahead before implementation begins (e.g., "暫時不修改檔案", "just reply on this point no change yet"). Confidence: 0.7
+- Wants clear status reporting that distinguishes what has been fixed/completed from what is still pending. Confidence: 0.6

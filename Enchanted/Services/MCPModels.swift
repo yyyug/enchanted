@@ -288,10 +288,15 @@ final class MCPServerStore: ObservableObject {
     /// The LLM model used to fulfill server sampling requests.
     var samplingModelName: String?
 
+    /// Default number of agentic tool-calling iterations per message.
+    static let defaultMaxToolCalls = 12
+    /// `UserDefaults` key for the max tool calls setting. 0 means unlimited.
+    static let maxToolCallsKey = "maxToolCalls"
+
     private let storageKey = "mcpServers"
     private var clients: [UUID: MCPClient] = [:]
     private var streamTasks: [UUID: Task<Void, Never>] = [:]
-    private var connectedServerIds: Set<UUID> = []
+    @Published private(set) var connectedServerIds: Set<UUID> = []
     private var toolCache: [UUID: [MCPTool]] = [:]
     private var toolResultCache: [String: (MCPToolResult, Date)] = [:]
 
@@ -322,6 +327,34 @@ final class MCPServerStore: ObservableObject {
         toolCache[server.id]?.count ?? 0
     }
 
+    func isConnected(_ server: MCPServerConfig) -> Bool {
+        connectedServerIds.contains(server.id)
+    }
+
+    /// Enables or disables a server from the list. Enabling reconnects it;
+    /// disabling tears down its connection and removes its tools.
+    func setEnabled(_ server: MCPServerConfig, _ enabled: Bool) {
+        guard let index = servers.firstIndex(where: { $0.id == server.id }) else { return }
+        guard servers[index].isEnabled != enabled else { return }
+        servers[index].isEnabled = enabled
+        let updated = servers[index]
+        save()
+
+        if enabled {
+            Task { await reconnect(updated) }
+        } else {
+            disconnect(updated)
+        }
+    }
+
+    func disconnect(_ server: MCPServerConfig) {
+        stopServerStream(for: server.id)
+        clients[server.id] = nil
+        connectedServerIds.remove(server.id)
+        toolCache.removeValue(forKey: server.id)
+        rebuildTools()
+    }
+
     func clearLastError() {
         lastError = nil
     }
@@ -346,6 +379,8 @@ final class MCPServerStore: ObservableObject {
         connectedServerIds.remove(server.id)
         toolCache.removeValue(forKey: server.id)
         resetPendingRequests()
+        // Drop cached tool results so a reconnected server never serves stale data.
+        toolResultCache.removeAll()
         rebuildTools()
         await connect(server)
         rebuildTools()

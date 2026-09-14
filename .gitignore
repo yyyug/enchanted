@@ -5,3 +5,6 @@ build/
 build-output/
 DerivedData/
 .DS_Store
+
+# Reference clones (not part of this project)
+joey-mcp-client/

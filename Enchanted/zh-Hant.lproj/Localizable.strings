@@ -165,3 +165,17 @@
 "%lld tools" = "%lld 個工具";
 "Sign Out" = "登出";
 "Sign In" = "登入";
+"Add MCP Server" = "新增 MCP 伺服器";
+"Tool Execution" = "工具執行";
+"Max Tool Calls" = "最大工具呼叫次數";
+"Unlimited" = "無限";
+"Maximum number of tool-calling rounds the assistant may run per message. Choose Unlimited to remove the cap." = "每則訊息中助理可執行工具呼叫的最大回合數。選擇「無限」可移除上限。";
+"Enable %@" = "啟用 %@";
+"Disabled" = "已停用";
+"Connected" = "已連線";
+"Not connected" = "未連線";
+"Double tap to edit" = "點兩下以編輯";
+
+/* VoiceOver */
+"Listening" = "正在聆聽";
+"Sending message" = "正在傳送訊息";

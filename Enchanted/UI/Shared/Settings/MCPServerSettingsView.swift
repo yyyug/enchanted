@@ -11,13 +11,63 @@ struct MCPServerSettingsView: View {
     @ObservedObject private var store = MCPServerStore.shared
     @Environment(\.dismiss) private var dismiss
 
+    @AppStorage(MCPServerStore.maxToolCallsKey) private var maxToolCalls: Int = MCPServerStore.defaultMaxToolCalls
+
     @State private var addingServer = false
     @State private var editingServer: MCPServerConfig?
     @State private var showingError = false
 
+    /// Preset choices mirroring common agentic clients. 0 = unlimited.
+    private let maxToolCallOptions: [Int] = [5, 10, 20, 50, 100, 0]
+
     var body: some View {
         NavigationStack {
             List {
+                // Servers first: existing servers, then an explicit add button.
+                Section {
+                    if store.servers.isEmpty {
+                        Text(NSLocalizedString("No MCP servers configured. Add one to enable tool calling.", comment: "Empty MCP servers message"))
+                            .foregroundColor(.secondary)
+                            .padding(.vertical, 6)
+                    }
+
+                    ForEach(store.servers) { server in
+                        serverRow(server)
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    store.remove(server)
+                                } label: {
+                                    Label(NSLocalizedString("Delete", comment: "Delete button"), systemImage: "trash")
+                                }
+                            }
+                    }
+
+                    Button {
+                        addingServer = true
+                    } label: {
+                        Label(NSLocalizedString("Add MCP Server", comment: "Add MCP server row"), systemImage: "plus.circle.fill")
+                    }
+                    .accessibilityLabel(NSLocalizedString("Add MCP server", comment: "Add MCP server button"))
+                } header: {
+                    Text(NSLocalizedString("Servers", comment: "MCP servers section header"))
+                }
+
+                // Options come after the server list.
+                Section {
+                    Picker(NSLocalizedString("Max Tool Calls", comment: "Max tool calls label"), selection: $maxToolCalls) {
+                        ForEach(maxToolCallOptions, id: \.self) { value in
+                            Text(value == 0
+                                 ? NSLocalizedString("Unlimited", comment: "Unlimited tool calls option")
+                                 : String(value))
+                                .tag(value)
+                        }
+                    }
+                } header: {
+                    Text(NSLocalizedString("Tool Execution", comment: "Tool execution section header"))
+                } footer: {
+                    Text(NSLocalizedString("Maximum number of tool-calling rounds the assistant may run per message. Choose Unlimited to remove the cap.", comment: "Max tool calls footer"))
+                }
+
                 Section {
                     Picker(NSLocalizedString("Sampling", comment: "Sampling policy label"), selection: $store.samplingPolicy) {
                         ForEach(MCPSamplingPolicy.allCases) { policy in
@@ -31,31 +81,6 @@ struct MCPServerSettingsView: View {
                     Text(NSLocalizedString("MCP Settings", comment: "MCP settings section header"))
                 } footer: {
                     Text(NSLocalizedString("Sampling controls how servers may request LLM completions directly.", comment: "Sampling settings footer"))
-                }
-
-                Section {
-                    if store.servers.isEmpty {
-                        Text(NSLocalizedString("No MCP servers configured. Add one to enable tool calling.", comment: "Empty MCP servers message"))
-                            .foregroundColor(.secondary)
-                            .padding(.vertical, 6)
-                    }
-
-                    ForEach(store.servers) { server in
-                        serverRow(server)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                editingServer = server
-                            }
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    store.remove(server)
-                                } label: {
-                                    Label(NSLocalizedString("Delete", comment: "Delete button"), systemImage: "trash")
-                                }
-                            }
-                    }
-                } header: {
-                    Text(NSLocalizedString("Servers", comment: "MCP servers section header"))
                 }
             }
             .navigationTitle(NSLocalizedString("MCP Servers", comment: "MCP servers title"))
@@ -94,15 +119,50 @@ struct MCPServerSettingsView: View {
         .frame(minWidth: 420, minHeight: 500)
     }
 
+    private func statusColor(_ server: MCPServerConfig) -> Color {
+        if !server.isEnabled { return Color.secondary.opacity(0.4) }
+        return store.isConnected(server) ? Color.green : Color.orange
+    }
+
+    private func statusDescription(_ server: MCPServerConfig) -> String {
+        if !server.isEnabled {
+            return NSLocalizedString("Disabled", comment: "Server disabled status")
+        }
+        return store.isConnected(server)
+            ? NSLocalizedString("Connected", comment: "Server connected status")
+            : NSLocalizedString("Not connected", comment: "Server not connected status")
+    }
+
     private func serverRow(_ server: MCPServerConfig) -> some View {
         HStack(alignment: .center, spacing: 12) {
+            Toggle(isOn: Binding(
+                get: { server.isEnabled },
+                set: { store.setEnabled(server, $0) }
+            )) {
+                EmptyView()
+            }
+            .labelsHidden()
+            .accessibilityLabel(String(
+                format: NSLocalizedString("Enable %@", comment: "Enable server toggle"),
+                server.name
+            ))
+
             VStack(alignment: .leading, spacing: 2) {
-                Text(server.name)
-                    .font(.body)
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(statusColor(server))
+                        .frame(width: 8, height: 8)
+                        .accessibilityHidden(true)
+                    Text(server.name)
+                        .font(.body)
+                }
                 Text(server.url)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
+                Text(statusDescription(server))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
                 if let info = server.serverInfo {
                     Text(info)
                         .font(.caption2)
@@ -114,6 +174,12 @@ struct MCPServerSettingsView: View {
                         .foregroundColor(.green)
                 }
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                editingServer = server
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityHint(NSLocalizedString("Double tap to edit", comment: "Edit server hint"))
 
             Spacer()
 
